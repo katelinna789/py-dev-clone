@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block content %} {% if object_list %}
+{% extends "base.html" %} {% block content %} {% if objects %}
 <ol class="breadcrumb">
     <li class="breadcrumb-item">
         <a href="#">项目</a>
@@ -11,9 +11,16 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <p>
-                    <button onclick="location.href='{% url 'project_create' %}'" type="button" class="btn btn-primary btn-xs">新建项目</button>
-                </p>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button onclick="location.href='{% url 'project_create' %}'" type="button" class="btn btn-primary btn-xs">新建项目</button>
+                    </div>
+                    <div class="col-sm-4">
+                        <form action={% url "project_search" %}>
+                        <input name="search" type="search" placeholder="">
+                        <button type="sumbit" class="btn btn-danger" > 搜索</button>
+                        <form>
+				    </div>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
@@ -29,7 +36,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for object in object_list %}
+                            {% for object in objects %}
                             <tr>
                                 <td>{{object.name}}</td>
                                 <td>{{object.description}}</td>
@@ -43,23 +50,25 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    <div class="pagination">
+                            <span class="step-links">
+                                {% if objects.has_previous %}
+                                   
+                                    <a href="?page={{ object.previous_page_number }}">上一页</a>
+                                {% endif %}
+                        
+                                <span class="current">
+                                    Page {{ objects.number }} of {{ objects.paginator.num_pages }}.
+                                </span>
+                        
+                                {% if objects.has_next %}
+                                    <a href="?page={{ objects.next_page_number }}">下一页</a>
+                                    
+                                {% endif %}
+                            </span>
+                        </div>
                 </div>
-                <!-- /.table-responsive -->
-                {% if is_paginated %}
-                <div class="pagination">
-                    <span class="page-links">
-                        {% if page_obj.has_previous %}
-                        <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">前一页</a>
-                        {% endif %}
-                        <span class="page-current">
-                             {{ page_obj.number }} of  {{ page_obj.paginator.num_pages }}.
-                        </span>
-                        {% if page_obj.has_next %}
-                        <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">下一页</a>
-                        {% endif %}
-                    </span>
                 </div>
-                {% endif %}
             </div>
             <!-- /.panel-body -->
         </div>
@@ -70,7 +79,12 @@
 <!-- /.row -->
 
 <!-- /.container-fluid -->
-
+<script>
+/*function search(){
+    var name = $("#search").val()
+    $.get('{% url "project_search"  %}' + "?name=" + name);
+}
+</script>
 {% else %}
 <p>There are no projects.</p>
 {% endif %} {% endblock %}

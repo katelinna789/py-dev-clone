@@ -50,15 +50,32 @@ def user_logout(request):
     logout(request)
     return redirect('user_login')
 
-class ProjectListView(LoginRequiredMixin, generic.ListView):
-    """
-    项目列表视图 
-    """
-    model = Project
-    template_name ='project/project_list.html'
-    paginate_by = 5
-    
+#class ProjectListView(LoginRequiredMixin, generic.ListView):
+#    """
+#    项目列表视图 
+#    """
+#    model = Project
+#    template_name ='project/project_list.html'
+#   paginate_by = 5
 
+@login_required
+def project_list(request):
+   
+    rs = Project.objects.all().order_by("-LastUpdateTime")
+    paginator = Paginator(rs, 5)
+    page = request.GET.get('page')
+    objects = paginator.get_page(page)
+    return render(request, "project/project_list.html", {"objects": objects})
+    
+@login_required
+def project_search(request):
+    name = request.GET.get("search")
+    rs = Project.objects.filter(name=name).order_by("-LastUpdateTime")
+    print(rs)
+    paginator = Paginator(rs, 5)
+    page = request.GET.get('page')
+    objects = paginator.get_page(page)
+    return render(request, "project/project_list.html", {"objects": objects})
 
 class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
     """
