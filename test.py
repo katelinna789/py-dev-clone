@@ -1,24 +1,40 @@
-def addnum(start, end):
-    sum = 0
-    for i in range(start, end):
-        sum += i
-        # print(sum)
-        yield
-    return sum
+import requests
+from bs4 import BeautifulSoup
+import queue
+
+start_page = "http://www.163.com"
+domain = "163.com"
+url_queue = queue.Queue()
+seen = set()
+
+seen.add(start_page)
+url_queue.put(start_page)
 
 
-g1 = addnum(1,51)
-g2 = addnum(51,101)
+def sotre(url):
+    pass
 
-next(g1)
-next(g2)
-for i in range(50):
-    try:
-        g1.send(1)
-    except StopIteration as exc:
-        sum1 = exc.value
-    try:
-        g2.send(1)
-    except StopIteration as exc:
-        sum2 = exc.value
-print(sum1 + sum2)
+def extract_urls(url):
+    urls = []
+    html = requests.get(url)
+    soup = BeautifulSoup(html.content, "html.parser")
+    for e in soup.findAll('a'):
+        url = e.attrs.get('href', '#')
+        urls.append(url)
+    return urls
+
+
+
+while True:
+
+    if not url_queue.empty():
+
+        current_url = url_queue.get()
+        print(current_url)
+        sotre(current_url)
+        for next_url in extract_urls(current_url):
+            if next_url not in seen and domain in next_url:
+                seen.add(next_url)
+                url_queue.put(next_url)
+    else:
+        break
