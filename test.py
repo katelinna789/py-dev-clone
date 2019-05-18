@@ -1,40 +1,20 @@
-import requests
-from bs4 import BeautifulSoup
-import queue
-
-start_page = "http://www.163.com"
-domain = "163.com"
-url_queue = queue.Queue()
-seen = set()
-
-seen.add(start_page)
-url_queue.put(start_page)
+import scrapy
 
 
-def sotre(url):
-    pass
+class QuotesSpider(scrapy.Spider):
+    name = "quotes"
 
-def extract_urls(url):
-    urls = []
-    html = requests.get(url)
-    soup = BeautifulSoup(html.content, "html.parser")
-    for e in soup.findAll('a'):
-        url = e.attrs.get('href', '#')
-        urls.append(url)
-    return urls
+    def start_requests(self):
+        urls = [
+            'http://quotes.toscrape.com/page/1/',
+            'http://quotes.toscrape.com/page/2/',
+        ]
+        for url in urls:
+            yield scrapy.Request(url=url, callback=self.parse)
 
-
-
-while True:
-
-    if not url_queue.empty():
-
-        current_url = url_queue.get()
-        print(current_url)
-        sotre(current_url)
-        for next_url in extract_urls(current_url):
-            if next_url not in seen and domain in next_url:
-                seen.add(next_url)
-                url_queue.put(next_url)
-    else:
-        break
+    def parse(self, response):
+        page = response.url.split("/")[-2]
+        filename = 'quotes-%s.html' % page
+        with open(filename, 'wb') as f:
+            f.write(response.body)
+        self.log('Saved file %s' % filename)

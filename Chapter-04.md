@@ -1,7 +1,7 @@
-# 第五天 爬虫实战
+# 第四天 爬虫高级
 
 ## 并发抓取
-将作业(抓取豆瓣电影 一周口碑榜，电影简介),改成并发模式，同时抓取多个网页
+### 同时抓取多个网页
 
 ```
 import requests
@@ -17,13 +17,13 @@ def get_orders(url):
     orders = bs.select('#billboard > div.billboard-bd > table')[0]
     urls = []
     for order in orders.find_all('a'):
-        urls.append((order['href'],order.string))
+        urls.append((order['href'],order.string)
     return t, urls
 
 
 def get_contents(url):
 
-    res = requests.get(url)
+    res = requests.get(url))
     bs = BeautifulSoup(res.text, 'lxml')
     c = bs.select('#link-report')[0]
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         print(content[1])
 ```
 
-## 保存抓取结果
+### 保存抓取结果
 
 1. 保存为文本
 
@@ -96,7 +96,13 @@ if __name__ == '__main__':
         for contents in contents:
             writer.writerow(contents)
 ```
-3. 写入数据库
+3. 保存到mysql
+
+[python-mysql c模块](https://www.runoob.com/python/python-mysql.html)
+
+[python-mysql python](https://www.runoob.com/python3/python3-mysql.html
+
+[mac 安装mysql](https://www.jianshu.com/p/e5c9e8ef8ccb)
 
 **准备工作**
 
@@ -177,6 +183,9 @@ if __name__ == '__main__':
 ## scrapy 
 
 ### 准备
+
+[twisted](https://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted)
+
 安装scrapy
 
 pip install d:\Twisted-18.9.0-cp36-cp36m-win_amd64.whl
@@ -187,11 +196,14 @@ pip install pypiwin32
 ### scrapy架构
 
 [文档](https://docs.scrapy.org/en/latest/topics/architecture.html)
+
+[中文文档](https://scrapy-chs.readthedocs.io/zh_CN/1.0/topics/spiders.html)
+
 scrapy 是一个基于twisted的异步处理框架，是纯ptyhon实现的爬虫框架，模块间耦合度低，可扩展性强，可以灵活的完成格中需求
 
 Scrapy是用Twisted编写的，Twisted是一个流行的事件驱动的Python网络框架。因此，它使用非阻塞（也称为异步）代码实现并发。
 
-![img](./Chapter-05-code/pics/scrapy_architecture_02.png)
+![img](./Chapter-04-code/pics/scrapy_architecture_02.png)
 
 上图显示了Scrapy体系结构及其组件的概述，以及系统内部发生的数据流的概述（由红色箭头显示）。
 
@@ -247,6 +259,17 @@ tutorial/
         └── __pycache__
 
 ```
+example spider
+```
+cd tutorial
+scrapy genspider example example.com
+
+# 列出当前可用的spider
+scrapy list
+
+# 运行example spider
+scrapy crawl example
+```
 
 2. 第一个Spider
 
@@ -287,9 +310,9 @@ parse  对请求的响应结果进行处理。通常会解析响应，将抽取�
 在当前目录下生产两个html文件
 Scrapy Scheduler 调度由Spider的start_requests方法返回的scrapy.Request对象,收到请求后，实例化Reponse对象并调用callback方法(self.parse()),井Reponse做为参数传递
 
-3. 提取数据
+3. scrapy 交互式shell
 
-学习如何使用Scrapy提取数据的最佳方法是使用shell 
+使用Scrapy分析页面数据的最佳方法是使用shell 
 
 `scrapy shell 'http://quotes.toscrape.com/page/1/'`
 
@@ -397,6 +420,8 @@ scrapy crawl quotes
 {'text': '“I may not have gone where I intended to go, but I think I have ended up where I needed to be.”', 'author': 'Dougla
 s Adams', 'tags': ['life', 'navigation']}
 ```
+练习： 豆瓣电影排行榜
+
 4. 保存抓取的数据
 
 ```
