@@ -32,6 +32,8 @@ while True:
             if next_url not in seen:
                 seen.add(next_url)
                 url_queue.put(next_url)
+    else:
+        break
 
 
 
