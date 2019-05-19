@@ -564,3 +564,6 @@ MYSQL_HOST='localhost'
 MYSQL_DATABASE='test'
 MYSQL_USER='root'
  ```
+ 
+ ## 作业 
+ 爬取最受欢迎电影影评 https://movie.douban.com/review/best/ 使用scrpy完成 并且存入mysql数据库
