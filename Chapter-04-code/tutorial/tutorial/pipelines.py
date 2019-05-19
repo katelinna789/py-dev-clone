@@ -8,20 +8,25 @@
 import MySQLdb
 
 class TutorialPipeline(object):
-   def __init__(self, host, database, user):
+   def __init__(self, host, database, user, port,password):
        self.host = host
        self.database = database
        self.user = user
+       self.port = port
+       self.password = password
    @classmethod
    def from_crawler(cls, crawler):
        settings = crawler.settings
        return cls(
            settings.get('MYSQL_HOST'),
            settings.get('MYSQL_DATABASE'),
-           settings.get('MYSQL_USER')
+           settings.get('MYSQL_USER'),
+           settings.get('MYSQL_PORT'),
+           settings.get('MYSQL_PASSWORD')
            )
    def open_spider(self, spider):
-       self.db = MySQLdb.connect(host=self.host,database=self.database,user=self.user, charset='utf8')
+       print(self.port,self.password)
+       self.db = MySQLdb.connect(host=self.host,database=self.database,user=self.user, port=self.port,password=self.password, charset='utf8')
        self.cursor = self.db.cursor()
    def close_spider(self, spider):
        self.cursor.close()
