@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
 [python-mysql c模块](https://www.runoob.com/python/python-mysql.html)
 
-[python-mysql python](https://www.runoob.com/python3/python3-mysql.html
+[python-mysql python](https://www.runoob.com/python3/python3-mysql.html)
 
 [mac 安装mysql](https://www.jianshu.com/p/e5c9e8ef8ccb)
 
