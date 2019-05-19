@@ -46,12 +46,12 @@ if __name__ == '__main__':
 ```
 
 def get_contents(url):
-    url, name = url.split('|')
+
     res = requests.get(url)
     bs = BeautifulSoup(res.text, 'lxml')
     c = bs.select('#link-report')[0]
 
-    return(name, c.text)
+    return(c.text)
 
 if __name__ == '__main__':
 
@@ -104,6 +104,9 @@ if __name__ == '__main__':
 
 [mac 安装mysql](https://www.jianshu.com/p/e5c9e8ef8ccb)
 
+[windows mysql 下载](https://cdn.mysql.com//Downloads/MySQL-5.7/mysql-5.7.26-winx64.zip))
+[mac os mysql下载](https://cdn.mysql.com//Downloads/MySQL-5.7/mysql-5.7.26-macos10.14-x86_64.dmg)
+
 **准备工作**
 
 安装mysqlclient
@@ -121,11 +124,12 @@ import MySQLdb
 
 db = MySQLdb.connect(host='localhost',user="root",database="test")
 cursor = db.cursor()
-sql = '''create table if not exists moive(
-    id int auto_increment, 
-    name varchar(50), 
-    content varchar(250),
-    PRIMARY KEY (`id`))'''
+sql = '''CREATE TABLE `moive` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) DEFAULT NULL,
+  `content` varchar(250) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8'''
 cursor.execute(sql)
 cursor.close()
 db.close()
@@ -186,12 +190,14 @@ if __name__ == '__main__':
 
 [twisted](https://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted)
 
-安装scrapy
-
+安装scrapy windows
+```
 pip install d:\Twisted-18.9.0-cp36-cp36m-win_amd64.whl
 pip install scrapy
 pip install pypiwin32
-
+```
+安装scrapy mac os
+pip3 install scrapy
 
 ### scrapy架构
 
