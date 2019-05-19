@@ -17,13 +17,13 @@ def get_orders(url):
     orders = bs.select('#billboard > div.billboard-bd > table')[0]
     urls = []
     for order in orders.find_all('a'):
-        urls.append((order['href'],order.string)
+        urls.append((order['href'],order.string))
     return t, urls
 
 
 def get_contents(url):
 
-    res = requests.get(url))
+    res = requests.get(url)
     bs = BeautifulSoup(res.text, 'lxml')
     c = bs.select('#link-report')[0]
 
