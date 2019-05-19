@@ -519,35 +519,39 @@ class QuotesSpider(scrapy.Spider):
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-from scrapy.conf import settings
+
 import MySQLdb
 
 class TutorialPipeline(object):
-    def __init__(self, host, database, user):
-        self.host = host
-        self.database = database
-        self.user = user
-    @classmethod
-    def from_crawler(cls, crawler):
-        settings = crawler.settings
-        return cls(
-            settings.get('MYSQL_HOST'),
-            settings.get('MYSQL_DATABASE'), 
-            settings.get('MYSQL_USER')
-            )
-    def open_spider(self, spider):
-        self.db = MySQLdb.connect(host=self.host,database=self.database,user=self.user, charset='utf8')
-        self.cursor = self.db.cursor()
-    def close_spider(self, spider):
-        self.cursor.close()
-        self.db.close()
-    def process_item(self, item, spider):
-        data = dict(item)
-        sql = 'insert into qutoes(text, author, tags) values("%s", "%s", "%s")' % (data['text'],data['author'],data['tags'])
-        self.cursor.execute(sql)
-        self.db.commit()
-        return item
-
+   def __init__(self, host, database, user, port,password):
+       self.host = host
+       self.database = database
+       self.user = user
+       self.port = port
+       self.password = password
+   @classmethod
+   def from_crawler(cls, crawler):
+       settings = crawler.settings
+       return cls(
+           settings.get('MYSQL_HOST'),
+           settings.get('MYSQL_DATABASE'),
+           settings.get('MYSQL_USER'),
+           settings.get('MYSQL_PORT'),
+           settings.get('MYSQL_PASSWORD')
+           )
+   def open_spider(self, spider):
+       print(self.port,self.password)
+       self.db = MySQLdb.connect(host=self.host,database=self.database,user=self.user, port=self.port,password=self.password, charset='utf8')
+       self.cursor = self.db.cursor()
+   def close_spider(self, spider):
+       self.cursor.close()
+       self.db.close()
+   def process_item(self, item, spider):
+       data = dict(item)
+       sql = 'insert into qutoes(text, author, tags) values("%s", "%s", "%s")' % (data['text'],data['author'],data['tags'])
+       self.cursor.execute(sql)
+       self.db.commit()
+       return item
  ```
 
  修改settings.py
@@ -562,8 +566,20 @@ class TutorialPipeline(object):
  ```
 MYSQL_HOST='localhost'
 MYSQL_DATABASE='test'
+MYSQL_PORT=3306
 MYSQL_USER='root'
+MYSQL_PASSWORD=''
  ```
- 
+ 在test库中创建表
+ ```
+ use test;
+ CREATE TABLE `qutoes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `text` varchar(100) COLLATE utf8_bin DEFAULT NULL,
+  `author` varchar(45) COLLATE utf8_bin DEFAULT NULL,
+  `tags` varchar(45) COLLATE utf8_bin DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ ```
  ## 作业 
  爬取最受欢迎电影影评 https://movie.douban.com/review/best/ 使用scrpy完成 并且存入mysql数据库
