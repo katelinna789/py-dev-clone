@@ -98,21 +98,29 @@ if __name__ == '__main__':
 ```
 3. 保存到mysql
 
+python mysql模块
 [python-mysql c模块](https://www.runoob.com/python/python-mysql.html)
 
 [python-mysql python](https://www.runoob.com/python3/python3-mysql.html)
 
-[mac 安装mysql](https://www.jianshu.com/p/e5c9e8ef8ccb)
 
+
+windows 安装mysql
 [windows mysql 下载](https://cdn.mysql.com//Downloads/MySQL-5.7/mysql-5.7.26-winx64.zip))
+
+mac 安装mysql
 [mac os mysql下载](https://cdn.mysql.com//Downloads/MySQL-5.7/mysql-5.7.26-macos10.14-x86_64.dmg)
+下载后安装，默认密码在通知里显示
+修改默认密码
+```
+mysql -uroot -p 默认密码
+et password for root@localhost = password('123'); 
+```
 
 **准备工作**
 
 安装mysqlclient
-
 pip install --only-binary :all: mysqlclient
-
 --only-binary 安装编译好的二进制
 
 启动mysql server
