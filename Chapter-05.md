@@ -1,4 +1,4 @@
-# 爬虫实战
+# 第五天 爬虫实战
 
 ## ajax内容抓取
 Ajax ，全称为 Asynchronous JavaScript and XML ，即异步的 JavaScript 和 XML 。 它不是一门编程语言，而是利用 JavaScript 在保证页面不被刷新、
@@ -183,14 +183,14 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from scrapy.http import HtmlResponse
 import time
-class PhantomjsMiddleware(object):
+class SeleniumMiddleware(object):
     def process_request(self, request, spider):
         if spider.name == "TrainSchedule":
             chrome_options = Options()
-            chrome_options.add_argument('--headless')
-            chrome_options.add_argument('--disable-gpu')
-            driver = webdriver.Chrome(executable_path=r'D:\chromedriver.exe',
-            chrome_options=chrome_options) 
+            #chrome_options.add_argument('--headless')
+            #chrome_options.add_argument('--disable-gpu')
+            driver = webdriver.Chrome(executable_path=r'D:\python3\chromedriver.exe',
+            chrome_options=chrome_options)
             # driver = webdriver.Firefox()
             driver.get(request.url)
             time.sleep(5)
@@ -323,4 +323,76 @@ LinkExtractor  类为链接提取类可以提取html中的所有链接
 `pip3 install scrapy-redis`
 
 安装redis
-`
+```
+# 安装epel yum源
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+# 安装redis
+yum install redis
+
+# 修改配置 默认只监听127.0.0.1 的 6379
+vi /etc/redis.conf
+bind 0.0.0.0
+
+# 启动redis
+systemctl start redis
+ 
+```
+
+### 新建项目
+scrapy startproject websiteDstributed
+
+### 修改settings.py
+```
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+ITEM_PIPELINES = {
+    'scrapy_redis.pipelines.RedisPipeline': 300
+}
+REDIS_URL = 'redis://ip:6379
+```
+
+### 创建spider 类
+
+```
+from scrapy_redis.spiders import RedisSpider
+
+import os.path
+from urllib.parse import urlparse
+from scrapy.linkextractors import LinkExtractor
+
+
+
+class DyttSpider(RedisSpider):
+    name = 'dytt'
+    allowed_domains = ['www.dytt8.net']
+    #start_urls = ['https://www.dytt8.net']
+    redis_key = 'dytt'
+
+    def parse(self, response):
+        urlpath= urlparse(response.url).path
+        if not os.path.exists('./data'):
+            os.mkdir("./data")
+        dirpath = './data/' + '/'.join(urlpath.split('/')[:-1]).strip('/')
+        filename = urlpath.split('/')[-1]
+        if filename:
+            filepath = os.path.join(dirpath, filename)
+            if not os.path.exists(dirpath):
+                os.makedirs(dirpath)
+            with open(filepath,"wb") as f:
+                f.write(response.body)
+        linkextractor = LinkExtractor()
+        links = linkextractor.extract_links(response)
+        for link in links:
+            next_page = link.url
+
+            if next_page is not None:
+                yield response.follow(next_page, callback=self.parse)
+```
+
+### 创建任务
+```
+redis-cli
+
+lpush dytt https://www.dytt8.net
+```
