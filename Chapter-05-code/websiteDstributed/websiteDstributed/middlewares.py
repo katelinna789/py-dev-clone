@@ -8,7 +8,7 @@
 from scrapy import signals
 
 
-class Web12306SpiderMiddleware(object):
+class WebsitedstributedSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -56,7 +56,7 @@ class Web12306SpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class Web12306DownloaderMiddleware(object):
+class WebsitedstributedDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -101,28 +101,3 @@ class Web12306DownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
-
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from scrapy.http import HtmlResponse
-import time
-class SeleniumMiddleware(object):
-    def process_request(self, request, spider):
-        if spider.name == "TrainSchedule":
-            chrome_options = Options()
-            #chrome_options.add_argument('--headless')
-            #chrome_options.add_argument('--disable-gpu')
-            chrome_options.add_argument("--proxy-server=socks5://127.0.0.1;8000")
-            driver = webdriver.Chrome(executable_path=r'D:\python3\chromedriver.exe',
-            chrome_options=chrome_options)
-            # driver = webdriver.Firefox()
-            driver.get(request.url)
-            time.sleep(5)
-            body = driver.page_source
-            return HtmlResponse(driver.current_url, body=body, encoding='utf-8', request=request)
-        else:
-                return
-    def spider_closed(self, spider, reason):
-        print ('close driver......')
-        self.driver.close()

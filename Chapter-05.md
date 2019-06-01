@@ -336,20 +336,25 @@ bind 0.0.0.0
 
 # 启动redis
 systemctl start redis
- 
+
+# 确认服务启动端口
+ss -tlnp | grep 6379
+# 关掉防火墙
+systemctl stop firewalld
+systemctl disable firewalld
 ```
 
 ### 新建项目
 scrapy startproject websiteDstributed
 
-### 修改settings.py
+### 修改settings.py, 追加配置
 ```
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 ITEM_PIPELINES = {
     'scrapy_redis.pipelines.RedisPipeline': 300
 }
-REDIS_URL = 'redis://ip:6379
+REDIS_URL = 'redis://ip:6379'
 ```
 
 ### 创建spider 类
