@@ -640,7 +640,7 @@ CSS中的所有颜色值都是在sRGB（标准的红色，绿色和蓝色）颜�
 这个空间内的颜色是通过将红色，绿色和蓝色通道混合在一起形成的，如显示器，电视机
 通过混合不同等级的红色，绿色和蓝色，我们可以创造出数百万种颜色，并找到几乎任何我们想要的颜色。
 
-目前，在CSS中有四种主要方式来表示sRGB颜色：名称，十六进制表示法以及RGB和HSL值
+目前，在CSS中有三种主要方式来表示sRGB颜色：名称，十六进制表示法以及RGB
 
 这些名称及其相应的颜色由CSS规范确定。最常见的颜色，都有关键字名称。
 这些名称的完整列表可以在CSS规范中找到
@@ -1072,7 +1072,7 @@ section {
 [示例](./Chapter-06-code/example7.html)
 
 
-##js
+## js
 ### [js简介](http://www.runoob.com/js/js-intro.html)
 ### [dom简介](http://www.runoob.com/js/js-htmldom.html)
 ### [js操作html](http://www.runoob.com/js/js-htmldom-html.html)
