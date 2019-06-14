@@ -18,7 +18,7 @@ URL是URI的子集，也就是说每个URL都是URI，但不是每个URI都是UR
 URI可以分为URL,URN或同时具备locators 和names特性的一个东西。URN作用就好像一个人的名字，URL就像一个人的地址。换句话说：
 URN确定了东西的身份，URL提供了找到它的方式。
 
-![img](./Chapter-04-code/pics/url-uri-miessler2018-e1541689316436.png)
+![img](./Chapter-03-code/pics/url-uri-miessler2018-e1541689316436.png)
 
 
 
@@ -29,22 +29,22 @@ HTTPS的全称是Hyper Text Transfer Protocol over Secure Socket Layer，是以�
 
 HTTP请求过程
 
-![img](./Chapter-04-code/pics/1522052700.jpg)
+![img](./Chapter-03-code/pics/1522052700.jpg)
 
 http请求方法
 
 常见的请求方法有两种：GET和POST
 其它请求方法
 
-![img](./Chapter-04-code/pics/1522052793.jpg)
+![img](./Chapter-03-code/pics/1522052793.jpg)
 
 请求报文
 
-![img](./Chapter-04-code/pics/143006_LICd_1469576.jpg)
+![img](./Chapter-03-code/pics/143006_LICd_1469576.jpg)
 
 状态码
 
-![img](./Chapter-04-code/pics/1522052892.jpg)
+![img](./Chapter-03-code/pics/1522052892.jpg)
 
 
 ### 网页组成
