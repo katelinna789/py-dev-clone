@@ -365,13 +365,13 @@ TEMPLATES = [
 <title>navigation</title>
 </head>
 <body>
-<h1>Rango says...</h1>
+<h1>django says...</h1>
 <div>
-hey there partner! <br />
+这是第一个页面 <br />
 <strong>{{ boldmessage }}</strong><br />
 </div>
 <div>
-<a href="/rango/about/">关于</a><br />
+<a href="/navigation/about/">关于</a><br />
 </div>
 </body>
 </html>
@@ -408,7 +408,7 @@ def about(request):
 板，生成一个完整的 HTML 页面，作为 HttpResponse 对象返回，分发给 Web 浏览器
 
 我们已经更新视图，用上了模板。现在启动 Django 开发服务器，然后访问 http://127.0.0.1:8000/
-rango/。你应该能看到这个简单的 HTML 模板渲染出来了
+navigation/。你应该能看到这个简单的 HTML 模板渲染出来了
 
 ## 静态文件
 
@@ -467,7 +467,7 @@ Django 在其中寻找静态文件。默认情况下， settings.py 文件中没
 件。这样便可以在模板中使用 static 模板标签引入静态目录中的文件。 `{% static "images/
 django.jpg" %}` 告诉 Django，我们想显示静态目录中名为 images/django.jpg 的图像。 static 标签会在images/django.jpg 前加上 STATIC_URL 指定的 URL，得到 /static/images/django.jpg。 Django 模板引擎生成的 HTML 如下：
 
-`<img src="/static/images/django.jpg" alt="Picture of Rango">`
+`<img src="/static/images/django.jpg" alt="Picture of django">`
 
 修改视图之后，启动 Django 开发服务器.
 
@@ -861,7 +861,7 @@ class Category(models.Model):
 populate.py，写入下述代码：
 ```
 import os
-# 配置环境变量,不然能导入navigation中的models
+# 配置环境变量,不然不能导入navigation中的models
 os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                       'first_project.settings')
 # 配置django
@@ -931,7 +931,7 @@ if __name__ == '__main__':
 get_or_create() 方法返回一个元组 (object, created)。第一个元素是数据库中不存在记录时创建的模型实例引用。这个模型实例使用传给 get_or_create() 方法的参数创建，例如上例中的 category、 title、 url 和 views。如果数据库中存在相应的记录， get_or_create() 方法返回那个记录。 created 是布尔值， get_or_create() 创建模型实例时值为 True
 
 
-保存文件，在终端把当前工作目录切换到 Django 项目的根目录，然后执行 python populate_rango.py 命令。你应该会看到类似下面的输出
+保存文件，在终端把当前工作目录切换到 Django 项目的根目录，然后执行 python populate.py 命令。你应该会看到类似下面的输出
 
 ```
 开始导入数据
