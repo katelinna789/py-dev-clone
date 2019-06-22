@@ -1,0 +1,23 @@
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+    <div>
+    {% if category %}
+      <h1>{{ category.name }}</h1>
+      {% if pages %}
+        <ul>
+          {% for page in pages %}
+            <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+         <strong>当前分类没有内容.</strong>
+      {% endif %}
+    {% else %}
+      指定分类不存在
+    {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'index' %}">首页</a><br />
+    </div>
+{% endblock  %}

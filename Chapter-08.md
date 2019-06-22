@@ -1,820 +1,1133 @@
 #  第八天
 
-##  Django介绍
-Django是一个高级Python Web框架，鼓励快速开发和实用的设计。
-由经验丰富的开发人员开发，它可以处理Web开发的大部分问题，
-因此可以专注于编写应用程序，而无需重新发明轮子。
+## 模型、视图、模板
+我们已经定义了两个模型，还在数据库中填充了一些示例数据，接下来可以连接模型、视图和模板。
 
-Django 特点
-1.  快速: Django旨在帮助开发人员尽可能快地完成应用程序
-2.  安全: Django严肃对待安全并帮助开发人员避免许多常见的安全错误
-3.  可伸缩:  Django快速灵活扩展的能力
-4.  丰富的组件: Django 内置各种web开发常用功能组件
+### 创建数据驱动页面的流程
 
-## Django安装
+在 Django 中创建数据驱动页面主要分为 5 步：
+1. 在 views.py 文件中导入想使用的模型。
+2. 在视图函数中查询模型，获取想呈现的数据。
+3. 把从模型获取的数据传给模板上下文。
+4. 创建或修改模板，显示上下文中的数据。
+5. 把 URL 映射到视图上。
+以上就是在 Django 框架中把模型、视图和模板连接在一起的步骤。
 
-使用pip
-```
-pip install django
-```
+### 在首页上显示分类（Category）
 
-验证django
-```
->>> import django
->>> django.get_version()
-'2.1.4'
+#### 导入所需的模型
 
-```
+首先完成第一步。打开 navigation/views.py 文件，在顶部他导入语句之后从 Rango 应用的 models.py文件中导入 Category 模型：
 
-## 创建一个项目
+`from navigation.models import Category`
 
-在pycharm Terminal中输入
+#### 修改index视图
 
-`django-admin startproject mysite`
-
-项目结构
-```
-└── mysite
-    ├── manage.py
-    └── mysite
-        ├── __init__.py
-        ├── settings.py
-        ├── urls.py
-        └── wsgi.py
+下面完成第 2 步和第 3 步。我们要修改主页的视图函数，即 index()。根据下述代码修改。
 
 ```
-
-+ 顶部mysite:  项目根目录。 它的名字与Django无关; 你可以将它重命名为任何你喜欢的名字
-+ manager.py: 一个命令行实用程序，可让您以各种方式与此Django项目进行交互。
-+ 内部mysite: 项目的实际Python包。 它的名字是你需要用来导入任何东西的Python包名
-+ mysite/__init__.py: 一个空文件，告诉Python这个目录应该被视为一个Python包
-+ mysite/settings.py:  这个Django项目的配置文件
-+ mysite/urls.py:  这个Django项目的URL声明
-+ mysite/wsgi.py:  WSGI兼容的Web服务器,为项目提供服务的入口点
-
-以开发模式运行服务器
-
-```
-cd mysite
-python manage.py runserver
-```
-
-访问django 
-在浏览器打开http://127.0.0.1:8000
-
-修改开发服务器默认端口
-````
-cd mysite
-python manage.py runserver 8080
-````
-
-默认开发服务器监听127.0.0.1
-修改监听ip
-```
-python manage.py runserver 0:8000
-```
-
-## 创建第一个app
-项目和应用程序有什么区别？ 应用程序是一种Web应用程序，它可以执行某些操作，
-例如博客系统，公共记录数据库或简单的民意调查应用程序。 
-项目是特定网站的配置和应用程序的集合。 项目可以包含多个应用程序。
-
-````
-python manage.py startapp myapp
-````
-
-myapp目录结构
-
-````
-myapp
-├── admin.py
-├── apps.py
-├── __init__.py
-├── migrations
-│   └── __init__.py
-├── models.py
-├── tests.py
-└── views.py
-````
-
-+ admin.py  将models注册到djangoadmin
-+ apps.py  app 配置
-+ __init__.py  表明该文件夹为包
-+ migrations  数据库版本升级
-+ models.py 数据库管理
-+ tests.py  测试文件
-+ views  视图文件
-
-编辑myapp/views.py
-```
-from django.http import HttpResponse
-
-# Create your views here.
-
-
 def index(request):
-    return HttpResponse("Hello world,You're at myapp index")
+    # 查询数据库，获取目前存储的所有分类
+    # 按点赞次数倒序排列分类
+    # 获取前 5 个分类（如果分类数少于 5 个，那就获取全部）
+    # 把分类列表放入 context_dict 字典
+    # 稍后传给模板引擎
+    category_list = Category.objects.order_by('-likes')[:5]
+    context_dict = {'categories': category_list}
+    # 渲染响应，发给客户端
+    return render(request, 'navigation/index.html', context_dict)
 ```
 
-创建myapp/urls.py
+这里的 Category.objects.order_by('-likes')[:5] 从 Category 模型中查询最受欢迎的前 5 个分类。 order_by() 方法的作用是排序，这里我们根据 likes 字段的值倒序排列。 -likes 中的 - 号表示倒序（如果没有 - 号，返回的结果是升序排列的）。因为我们想获得一个分类对象列表，所以使用 Python 的列表切片从列表中获取前 5 个对象（ [:5]），返回一个 Category 对象子集。查询结束后，把列表的引用（ category_list 变量）传给 context_dict 字典。最后把这个字典作为模板上下文传给 render() 函数。
+
+#### 修改index.html模板
+更新视图之后，接下来要做第 4 步，更新项目根目录中 templates 目录里的 navigation/index.html 模板。根据下述代码片段修改模板中的 HTML。
 
 ```
-from django.urls import path
-
-from .  import views
-
-
-urlpatterns = [
-    path('', views.index, name='index')
-]
-
-```
-编辑mysite/urls.py
-
-```
-from django.contrib import admin
-from django.urls import path, include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('myapp.urls'))
-]
-```
-
-注册应用
-
-```
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'myapp.apps.MyappConfig',
-]
-```
-注意：注意到INSTALLED_APPS已经有许多其他的应用了 (还有 MIDDLEWARE, 在settings的下面)。这些应用为  Django administration site 提供了支持和许多功能(包括会话，认证系统等)。
-再次访问 http://127.0.0.1:8000/
-
-
-开始一个新项目
-+ 使用django的工具创建一个网站项目和应用
-+ 创建模型（models）
-+ 使用django的admin站点来填充网站数据
-+ 创建视图函数（views）来取回相应的数据，并用模板（templates）渲染成HTML页面
-+ 创建urlconf，将不同的url分发给特定的视图函数（views）
-+ 添加用户认证和会话（sessions）
-+ 表单
-+ 编写单元测试
-
-## 创建一个新的项目
-创建一个图书管理项目，这个网站的目标是为一个小型的图书馆提供一个在线的目录。在这个小型图书管里，用户能浏览书籍和管理他们的账户。
-
-### 搭建网站框架
-1. 使用django-admin 工具创建项目文件夹
-2. 使用manager.py创建一个应用
-3. 在项目配置文件（settings.py）中注册应用
-4. 为应用分配url
-
-### 创建项目
-```
-django-admin startproject locallibrary
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head>
+    <title>Rango</title>
+  </head>
+  <body>
+    <h1>django说...</h1>
+    <div>大家好!</div>
+    <div>
+      {% if categories %}
+      <ul>
+        {% for category in categories %}
+        <li>{{ category.name }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有分类.</strong>
+      {% endif %}
+    </div>
+    <div>
+      <a href="/navigation/about/">关于</a><br />
+      <img src="{% static "images/django.jpg" %}" alt="Picture of django" />
+    </div>
+  </body>
+</html>
 ```
 
-### 创建catalog应用
-接下来，在locallibrary项目里，使用下面的命令创建catalog应用
+这里，我们使用 Django 模板语言提供的 if 和 for 控制语句呈现数据。在页面的 <body> 元素中，我们判断 categories（包含分类列表的上下文变量）中有没有分类`{% if categories %}`。如果有分类，构建一个 HTML 无序列表` <ul>` 。 for 循环迭代分类列表` {% for category in categories %}`，在列表项目` <li> `标签中输出各分类的名称`{{ category.name }}`。
+如果没有分类，显示一个消息，指明没有分类。从上述代码片段可以看出， Django 模板语言中的命令放在 {% 和 %} 之间，而变量放在 {{ 和 }} 之间。
+
+现在访问 Rango 的主页应该会看到页面标题下方显示着分类列表
+
+![img](./Chapter-08-code/pics/django6.jpg)
+
+### 创建分类页面
+每个分类还有对应的详情页面(显示这个catagory所关联的page)我们要定义一个参数化视图，而且 URL 模式中要编码分类名称。
+
+#### URL 设计和映射
+
+我们可以在 URL 中使用分类的唯一 ID，例如 /navigation/category/1/ 或 /navigation/category/2/，其中的数字 1 和 2 是分类的唯一 ID。可是从 ID 上看不出到底是哪个分类。
+
+更好的方法是在 URL 中使用分类的名称。例如，可以通过 URL /navigation/category/python/ 访问与Python 相关的网页列表。这样的 URL 简单、可读性高，而且具有一定的语义。如果采用这种形
+式，还要处理有多个单词的分类名，例如“Other Frameworks”。
+
+为此，我们要使用 Django 提供的 slugify 函数。
+
+#### 为分类添加 slug 字段
+为了得到可读性高的 URL，我们要为 Category 模型添加一个别名（ slug）字段。然后使用 Django提供的 slugify 函数把空白替换为连字符，例如 "how do i create a slug in django" 将变成"how-do-i-create-a-slug-in-django"
+
+此外，还要覆盖 Category 模型的 save() 方法，调用 slugify() 函数更新 slug 字段。注意，只要分类名称变了，别名就随之改变。参照下述代码片段更新模型
 
 ```
-python manage.py startapp catalog
-```
-
-
-### 注册catalog应用
-
-既然应用已经创建好了，我们还必须在项目里注册它，以便工具在运行时它会包括在里面（比如在数据库里添加模型时）。在项目的settings里，把应用添加进INSTALLED_APPS ，就完成了注册。
-
-打开项目设置文件 locallibrary/locallibrary/settings.py 找到  INSTALLED_APPS 列表里的定义。 如下所示，在列表的最后添加新的一行catalog.apps.CatalogConfig
-
-```
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'catalog.apps.CatalogConfig', 
-]
-```
-
-### 配置数据库
-sqllite
-```
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-```
-mysql
-```
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'locallibrary',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
-}
-```
-
-注意：mysql需要安装mysqlconnect模块，并现在mysql数据库中创建出一个数据库
-
-### 其他配置
-
-settings.py里还包括其他的一些设置，现在只需要改变时区。
-```
-TIME_ZONE = 'Asia/Shanghai'
-```
-
-### 配置urlconf
-
-打开locallibrary/locallibrary/urls.py 注意指导文字解释了一些使用URL映射器的方法。
-```
-from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('catalog/', include('catalog.urls')),
-    path('', RedirectView.as_view(url='/catalog/')),
-]
-
-```
-
-
-在catalog文件夹里创建一个名为 urls.py 的文件, 添加下面的代码urlpatterns. 我们会在编写应用时添加相关式样。
-```
-from django.urls import path
-
-from . import views
-
-
-urlpatterns = [
-    path('', views.index),
-]
-```
-
-初始话数据库
-```
-python.exe manage.py migrate
-```
-
-### 数据库
-
-Django 使用对象关系映射器（ORM）将Django代码中的模型定义映射到底层数据库使用的数据结构。当我们更改模型定义时，Django会跟踪更改并创建数据库迁移脚本 (in /locallibrary/catalog/migrations/) 来自动迁移数据库中的底层数据结构
-
-当我们创建网站时，Django会自动添加一些模型供网站的管理部分使用（稍后我们会解释）。运行以下命令来定义数据库中这些模型的表（确保你位于包含 manage.py 的目录中):
-
-```
-python manage.py migrate
-```
-注意： 每次模型改变，都需要运行以上命令，来影响需要存储的数据结构（包括添加和删除整个模型和单个字段）
-
-makemigrations 命令创建（但不适用）项目中安装的所有应用程序的迁移（你可以指定应用程序名称，也可以为单个项目运行迁移）
-这migrate命令明确应用迁移你的数据库（Django跟踪哪些已添加到当前数据库）
-
-
-## 使用模型
-
-Django Web应用程序通过被称为model的Python对象访问和管理数据。model定义存储数据的结构，包括字段类型以及可能还有最大大小，默认值，选择列表选项，帮助文档，表单的标签文本等。model的定义与底层数据库无关—你可以选择其中一个作为项目设置的一部分。一旦你选择了要使用的数据库，你就不需要直接与之交谈—只需编写模型结构和其他代码，Django可以处理与数据库通信的所有繁琐工作。
-
-## 设计LocalLibrary模型
-
-在开始编写模型之前，花几分钟时间考虑我们需要存储的数据以及不同对象之间的关系。
-
-我们知道，我们需要存储书籍的信息（标题，摘要，作者，语言，类别，ISBN），并且我们可能有多个副本.
-
-一旦我们已经决定了我们的模型和字段，我们需要考虑它们的关联性。Django允许你来定义一对一的关联（OneToOneField），一对多（ForeignKey）和多对多（ManyToManyField）。
-
-
-该图显示模型之间的关系，包括它们的多重性。多重性是图中的数字，显示可能存在于关系中的每个模型的数量（最大值和最小值）。例如，盒子之间的连接线显示书和类型相关。书模型中数字表明，一本书必须有一个或多个类别（尽可能多），而类型旁边的线的另一端的数字表明它可以有零个或更多的关联书
-
-![img](./Chapter-08-code/pic/local_library_model_uml_v0_1.png)
-             
-### 模型入门
-
-**模型定义**
-
-模型通常在 models.py 中定义。它们是继承自 django.db.models.Model的子类， 可以包括字段，方法和元数据。下面的代码片段展示了一个 “typical” 模型，名为 MyModelName：
-
-```
-from django.db import models
-
-class MyModelName(models.Model):
-    """
-    A typical class defining a model, derived from the Model class.
-    """
-
-    # Fields
-    my_field_name = models.CharField(max_length=20, help_text="Enter field documentation")
-    ...
-
-    # Metadata
-    class Meta: 
-        ordering = ["-my_field_name"]
-
-    # Methods
-    def get_absolute_url(self):
-         """
-         Returns the url to access a particular instance of MyModelName.
-         """
-         return reverse('model-detail-view', args=[str(self.id)])
-    
-    def __str__(self):
-        """
-        String for representing the MyModelName object (in Admin site etc.)
-        """
-        return self.field_name
-
-```
-
-**字段**
-
-模型可以有任意数量的字段，任何类型的字段—每个字段都表示我们要存储在我们的一个数据库中的一列数据。每个数据库记录（行）将由每个字段值之一组成。我们来看看例子。
-
-```
-my_field_name = models.CharField(max_length=20, help_text="Enter field documentation")
-```
-
-上面例子中单个字段叫 my_field_name ，类型为 models.CharField—这意味着这个字段将会包含字母数字字符串。使用特定的类分配字段类型，这些类决定了用于将数据存储在数据库中的记录的类型，以及从HTML表单接收到值（即构成有效值）时使用的验证标准。字段类型还可以获取参数，进一步指定字段如何存储或可以使用。在这种情况下，我们给出字段的两个参数：
-+ max_length=20 — 表示此字段中值的最大长度为20个字符的状态
-+ help_text="Enter field documentation" — 提供一个帮助用户的文本标签，让用户知道当前通过HTML表单输入时要提供什么值
-
-字段名称用于在查询和模版中引用它。字段还有一个标签，通过参数verbose_name指定，默认值为大写字段的变量名的第一个字母，并用空格 替换下划线（例如 my_field_name ->My field name ，这就是默认标签）
-
-如果模型以表单形式呈现（例如在管理站点中），则声明字段的顺序将影响其默认顺序
-
-**字段参数**
-在大多数字段，可以使用以下常用参数
-+ help_text: 提供HTML表单文本提示 (e.g. i在管理站点中)
-+ verbose_name: 字段标签中可读性名称，如果没有指定性，Django将从字段名称推断默认的详细名称
-+ default: 该字段的默认值。这可以是值或可调用对象，在这种情况下，每次创建新纪录时都将调用该对象。
-+ null: 如果是True，Django将 NULL 在数据库中存储适合的字段（一个CharField将代替一个空字符串）的空值。默认是False
-+ blank: 如果True，表单中的字段被允许为空白。默认是False，这意味着表单的字段不可以未空。一般设置为NULL=True，因为如果要允许空值，你还希望数据库能够适当地表示它们。
-+ choices: 这是一组字段选项。如果提供这一项，默认对应的表单部件是下拉选择框，而不是标准文本字段。
-+ primary_key: 如果是True，将当前字段设置为模型的主键（主键是指定唯一标识所有不同表记录的特殊数据库列）。如果没有指定字段作为主键，则Django将自动为此添加一个字段。
-
-**常用字段类型**
-+ CharField 是用来定义短到中等长度的字段字符串。你必须指定max_length要存储的数据。
-+ TextField  用于大型任意长度的字符串。你可以max_length为该字段指定一个最大值，但仅当该字段以表单显示时才会使用（不会在数据库级别强制执行）
-+ IntegerField 是一个用于存储整数（整数）值的字段，用于在表单中验证输入的值为整数。
-+ DateField 和 DateTimeField 用于存储／表示日期和日期／时间信息（分别是Python的datetime.date和datetime.datetime对象。这些字段具有单独参数auto_now=Ture （在每次保存模型时将该字段设置为当前日期），auto_now_add（仅设置模型首次创建时的日期）和default（设置默认日期，可以被用户覆盖）
-+ EmailField 用于存储和验证电子邮件地址
-+ FileField 和 ImageField 分别用于上传文件和图像（ImageField 只需添加上传的文件是图像的附加验证）。这些参数用于定义上传文件的存储方式和位置
-+ AutoField 是一种 IntegerField 自动递增的特殊类型。如果你没有明确指定一个主键，则此类型的主键将自动添加到模型中。
-+ ForeignKey 用于指定与另一个数据库模型的一对多关系（例如，汽车有一个制造商，但制造商可以制作许多汽车）
-+ ManyToManyField 用于指定多对多 关系（例如，一本书可以有几种类别，每种类别可以包含几本书）。在我们的图书馆应用程序中，我们将使用ForeignKeys，但是可以用更复杂的方式来描述组之间的关系。这些具有参数on_delete来定义关联记录被删除时会发生什么
-
-**元数据**
-
-你可以通过声明 class Meta 声明模型级别的元数据 
-```
-class Meta:
-    ordering = ["-my_field_name"]
-    ...
-```
-
-此元数据的最有用功能之一是控制在查询模型类型时返回的记录的默认排序。你可以通过在ordering 属性的字段名称列表中指定匹配顺序来执行此操作，如上所示。排序将依赖字段的类型（字符串字段按字母顺序排序，而日期字段按时间顺序排序）。如上所示，你可以使用减号（-）对字段名称进行前缀，以反转排序顺序。
-
-例如，如果我们选择默认排列这样的书单：
-```
-ordering = ["title", "-pubdate"]
-```
-
-书单通过标题依据-字母排序-排列，从A到Z，还有每个标题的出版日期，从最新到最旧。
-
-**方法**
-
-一个模型也可以有方法。
-
-最起码，在每个模型中，你应该定义标准的Python 类方法 __str__() 来为每个对象返回一个人类可读的字符串。此字符用于表示管理站点的各个记录（以及你需要引用模型实例的任何其他位置）。通常这将返回模型中的标题或名称字段。
-
-```
-def __str__(self):
-    return self.field_name
-```
-
-在Django模型中包含的另一种常用方法是get_absolute_url（），它返回一个URL，用于在网站上显示单个模型记录.
-（如果你定义了该方法，那么Django 将自动在“管理站点”中添加“在站点中查看“按钮在模型的记录编辑栏）。典型示例以下
-
-```
-def get_absolute_url(self):
-    """
-    Returns the url to access a particular instance of the model.
-    """
-    return reverse('model-detail-view', args=[str(self.id)])
-```
-
- 假设你将使用URL/myapplication/mymodelname/2 来显示模型的单个记录（其中“2”是 id 特定 记录），则需要创建一个URL映射器来将响应和id传递给 “模型详细视图” （这将做出显示记录所需的工作）。以上示例中，reverse() 函数可以“反转”你的url映射器（在上诉命名为“model-detail-view” 的案例中，以创建正确格式的URL。
-
-[models](https://docs.djangoproject.com/en/2.1/topics/db/models/)
-**模型管理**
-
- 一旦你定义了模型类，你可以使用它们来创建，更新或删除记录，并运行查询获取所有记录或特定的记录子集。当我们定义我们的视图，我们将展示给你在这个教程如何去做。
-
- 创建和修改记录
-
- 要创建一个记录，你可以定义一个模型实例，然后调用save()。
-
- ```
- # Create a new record using the model's constructor.
-a_record = MyModelName(my_field_name="Instance #1")
-
-# Save the object into the database.
-a_record.save()
- ```
- 如果你没有将任何字段声明为一个primary_key，新记录将自动给出一个字段名称id。保存上诉记录后，你可以查询此字段，值为1。
-
- 你可以使用 -点-语法 访问此新记录中的字段，并更改值。你必须调用 save() 将修改后的值存储到数据库
- ```
- # Access model field values using Python attributes.
-print(a_record.id) #should return 1 for the first record. 
-print(a_record.my_field_name) # should print 'Instance #1'
-
-# Change record by modifying the fields, then calling save().
-a_record.my_field_name="New Instance Name"
-a_record.save()
- ```
-[query](https://docs.djangoproject.com/en/2.1/topics/db/queries/)
-
-### 定义LocalLibrary模型
-
-我们将开始为库定义模型。打开models.py（在locallibrary/catalog/中）
-```
-from django.db import models
-
+from django.template.defaultfilters import slugify
 # Create your models here.
+class Category(models.Model):
+    name = models.CharField(max_length=128, unique=True)
+    views = models.IntegerField(default=0)
+    likes = models.IntegerField(default=0)
+    slug = models.SlugField()
 
-```
-from import语句导入models模块，模块模块包含我们的模型将继承的模型基类models.Model
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Category, self).save(*args, **kwargs)
 
-**Genre model**
+    class Meta:
+        verbose_name_plural = 'Categories'
 
-复制下面显示的类型模型代码并将其粘贴到models.py。此模型用于存储有关图书类别的信息（例如：文学，历史，经济。。）
-我们将类型创建为模型而不是自由文本或选择列表，以便可以通过数据库管理。
-
-```
-class Genre(models.Model):
-    """
-    Model representing a book genre (e.g. Science Fiction, Non Fiction).
-    """
-    name = models.CharField(max_length=200, help_text="Enter a book genre (e.g. Science Fiction, French Poetry etc.)")
-    
     def __str__(self):
-        """
-        String for representing the Model object (in Admin site etc.)
-        """
         return self.name
 ```
+更新模型之后，接下来要把变动应用到数据库上。然而，数据库中已经有数据了，因此我们必须考虑改动产生的影响。其实我们想做的很简单，就是从分类名称中得到别名（此项操作在初次保存记录时执行）。通过迁移工具能把 slug 字段添加到数据库中，而且可以为该字段指定默认值。可是，每个分类的别名应该是不同的。因此，我们将先执行迁移，然后重新运行填充脚本。之所以这么做，是因为填充脚本会在分类上调用 save() 方法，从而触发上面实现的 save() 方法，
 
-该模型有一个CharField字段（name），用于描述类型（这限制为200个字符，并有help_text参数），在模型的最后，我们声明了一个__str __（）方法，它只返回由特定记录定义的类型的名称
-
-**Book model**
 
 ```
-from django.urls import reverse #Used to generate URLs by reversing the URL patterns
-
-class Book(models.Model):
-    """
-    Model representing a book (but not a specific copy of a book).
-    """
-    title = models.CharField(max_length=200)
-    author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
-    summary = models.TextField(max_length=1000, help_text='Enter a brief description of the book')
-    isbn = models.CharField('ISBN',max_length=13, help_text='13 Character <a href="https://www.isbn-international.org/content/what-isbn">ISBN number</a>')
-    genre = models.ManyToManyField(Genre, help_text='Select a genre for this book')
-    
-    def __str__(self):
-        """
-        String for representing the Model object.
-        """
-        return self.title
-    
-    
-    def get_absolute_url(self):
-        """
-        Returns the url to access a detail record for this book.
-        """
-        return reverse('book-detail', args=[str(self.id)])
-```
-
-书籍模型代表一般意义上的可用书籍的所有信息，但不是可用于特定物理“实例”或“副本”.该模型使用CharField来表示书的title和isbn,注意isbn如何使用第一个未命名参数将其标签指定为“ISBN”，因为默认标签将为“Isbn”.genre 是ManyToManyField，因此一本书可以有多种类型，一种类型可以有很多书。author为ForeignKey，因此每本书只有一个作者，但作者可能有很多书。在两种字段类型中，使用模型类或包含相关模型名称的字符串将相关模型类声明为第一个未命名参数。如果在引用之前尚未在此文件中定义关联的类，则必须将模型的名称用作字符串！
-author字段中null = True，意思如果没有选择作者，则允许数据库存储Null值。on_delete = models.SET_NULL，如果关联的作者记录被删除，它将把author的值设置为Null。
-
-该模型还定义__str __（），使用书籍的title字段来表示书的记录，get_absolute_url（）返回一个可用于访问此模型的详细记录的URL（为此，我们必须定义具有名称book-detail的URL映射，并定义关联的视图和模板）。
-
-
-
- 
-
-**BookInstance model**
-
-BookInstance表示某人可能借阅的特定的一本书，并包含改书是否可借阅、预期返回的日期、版本信息、唯一id等
-
-```
-import uuid # Required for unique book instances
-
-class BookInstance(models.Model):
-    """
-    Model representing a specific copy of a book (i.e. that can be borrowed from the library).
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text="Unique ID for this particular book across whole library")
-    book = models.ForeignKey('Book', on_delete=models.SET_NULL, null=True) 
-    imprint = models.CharField(max_length=200)
-    due_back = models.DateField(null=True, blank=True)
-
-    LOAN_STATUS = (
-        ('m', 'Maintenance'),
-        ('o', 'On loan'),
-        ('a', 'Available'),
-        ('r', 'Reserved'),
-    )
-
-    status = models.CharField(max_length=1, choices=LOAN_STATUS, blank=True, default='m', help_text='Book availability')
-
-    class Meta:
-        ordering = ["due_back"]
-        
-
-    def __str__(self):
-        """
-        String for representing the Model object
-        """
-        return '{0} ({1})'.format(self.id,self.book.title)
-```
-+ id UUIDField用于id字段，将其设置为此模型的primary_key。这种类型的字段为每个实例分配一个全局唯一值
-+ book ForeignKey用于识别关联的书籍（每本书可以有多个副本，但副本只能有一本书）
-+ imprint CharField代表书的特定版本
-+ due_back DateField 可借阅日期（在借阅或维护之后，预计该书将可借阅的日期）此值可以为null。Class Meta 使用此字段在查询中返回记录时对记录进行排序。
-+ status CharField定义一个下拉列表，我们定义一个包含键值对元组的元组，并将其传递给choices参数.键/值对中的值是用户可以选择的显示值，而键是在选择选项时实际保存的值.我们还设置了default 为'm'（维护），因为在书架上放置书籍之前，它们最初将被创建为不可用。
-+ __str __（）使用其唯一ID和关联的Book的标题的组合来表示BookInstance对象。
-
-**Author model**
-
-```
-class Author(models.Model):
-    """
-    Model representing an author.
-    """
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    date_of_birth = models.DateField(null=True, blank=True)
-    date_of_death = models.DateField('Died', null=True, blank=True)
-
-    class Meta:
-        ordering = ["last_name","first_name"]
-    
-    def get_absolute_url(self):
-        """
-        Returns the url to access a particular author instance.
-        """
-        return reverse('author-detail', args=[str(self.id)])
-    
-
-    def __str__(self):
-        """
-        String for representing the Model object.
-        """
-        return '{0}, {1}'.format(self.last_name,self.first_name)
-```
-
-该模型将作者定义为具有名字，姓氏，出生日期和死亡日期(可选)， __str__() 返回单条记录的名称，get_absolute_url() 方法，返回作者详细信息URL映射以获取用于显示单个作者的URL。class Meta ordering定义返回一个查询集时的排序
-
-使用django shell
-搜索记录
-
- 你可以使用模型的 objects（基类提供）搜索符合特定条件的记录。
-
- 我们通过 QuerySet 获取一个模型的所有记录，使用 object.all()。这个QuerySet是个可迭代的对象，意味着它包括一些可以迭代/循环的对象。
-
- ```
- all_books = Book.objects.all()
- ```
-
- Django的 filter() 方法允许我们根据特定的标准过滤 返回QuerySet 的匹配指定的文本或数字字段。例如，要过滤在标题包含 “wild”和对其计数，我们可以像下面那样做。
-
- ```
-wild_books = Book.objects.filter(title__contains='wild')
-number_wild_books = Book.objects.filter(title__contains='wild').count()
- ```
-注意： 双下划线和大写敏感
-
-在某些情况下，你需要去过滤—定义了一对多关系到另一个模型的字段。在这种情况下，你可以使用附加双重下划线在相关模型中"索引"字段。例如，过滤特定类型模式的书，你将不得不索引类型字段名，如下：
-
-```
-books_containing_genre = Book.objects.filter(genre__name__icontains='fiction')
-```
-Book 所管关联的Genre模型中，字段名为name的字段值中包含fiction字符串的
-注意：icontains忽略大小写，contains 区分大小写
-
-### 重新运行数据库迁移
-```
-python manage.py makemigrations
+# 执行makemigrations
+python manage.py makemigrations navigation
+# 结果
+You are trying to add a non-nullable field 'slug' to category without a default; we can't do that (the database needs something to populate existing rows).
+Please select a fix:
+ 1) Provide a one-off default now (will be set on all existing rows with a null value for this column)
+ 2) Quit, and let me add a default in models.py
+Select an option: 1
+Please enter the default value now, as valid Python
+The datetime and django.utils.timezone modules are available, so you can do e.g. timezone.now
+Type 'exit' to exit this prompt
+>>> ''
+Migrations for 'navigation':
+  navigation\migrations\0004_category_slug.py
+    - Add field slug to category
+# 运行 migrate
 python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, navigation, sessions
+Running migrations:
+  Applying navigation.0004_category_slug... OK
+```
+
+我们没有为 slug 字段指定默认值，而且数据库中有数据，因此 makemigrations 命令会给你两个选择。选提供默认值的1选项，输入一个空字符串（两个引号，即 ''）。
+运行填充脚本，更新 slug字段。
+```
+python populate.py
+开始导入数据
+- Python - Official Python Tutorial
+- Python - How to Think like a Computer Scientist
+- Python - Learn Python in 10 Minutes
+- Django - Official Django Tutorial
+- Django - Django Rocks
+- Django - How to Tango with Django
+- Other Frameworks - Bottle
+- Other Frameworks - Flask
+```
+
+执行 python manage.py runserver 命令，启动 Django 开发服务器，在管理界面中查看模型中的数据
+
+#### 创建分类页面的步骤
+
+为了实现可通过 /rango/category/<category-name-slug>/ 访问的分类页面，我们要做几处修改。基
+本步骤如下：
+1. 把 Page 模型导入 navigation/views.py 模块。
+2. 在 navigation/views.py 模块中定义一个新视图，命名为 show_category()。这个视图有个额外的参数， category_name_slug，用于传入编码后的分类名称。为了编码和解码category_name_slug，要定义两个辅助函数。
+3. 创建一个模板， templates/navigation/category.html。
+4. 更新 navigation/urls.py. 中的 urlpatterns，把这个新视图映射到 URL 模式上。
+
+此外还要更新 index() 视图和 index.html 模板，添加指向分类页面的链接。
+
+#### 分类视图
+在 navigation/views.py 中，首先导入 Page 模型，即把下述导入语句添加到文件顶部：
+`from navigation.models import Page`
+
+然后定义视图 show_category()。
+```
+def show_category(request, category_name_slug):
+    # 创建上下文字典，稍后传给模板渲染引擎
+    context_dict = {}
+    try:
+        # 能通过传入的分类别名找到对应的分类吗？
+        # 如果找不到， .get() 方法抛出 DoesNotExist 异常
+        # 因此 .get() 方法返回一个模型实例或抛出异常
+        category = Category.objects.get(slug=category_name_slug)
+        # 检索关联的所有网页
+        # 注意， filter() 返回一个网页对象列表或空列表
+        pages = Page.objects.filter(category=category)
+        # 把得到的列表赋值给模板上下文中名为 pages 的键
+        context_dict['pages'] = pages
+        # 也把从数据库中获取的 category 对象添加到上下文字典中
+        # 我们将在模板中通过这个变量确认分类是否存在
+        context_dict['category'] = category
+    except Category.DoesNotExist:
+        # 没找到指定的分类时执行这里
+        # 什么也不做
+        # 模板会显示消息，指明分类不存在
+        context_dict['category'] = None
+        context_dict['pages'] = None
+    # 渲染响应，返回给客户端
+    return render(request, 'rango/category.html', context_dict)
+```
+
+这个视图的基本步骤与 index() 视图一样。首先定义上下文字典，然后尝试从模型中提取数据，并把相关数据添加到上下文字典中。我们通过传给 show_category() 视图函数的category_name_slug 参数确认要查看的是哪个分类。如果通过别名找到了分类，获取与之关联的网页，并将其添加到上下文字典 context_dict 中。
+
+#### 分类模板
+下面为这个新视图创建模板。在templates/navigation/ 目录中新建 category.html 文件，写入下述代码。
+
+```
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>navigation</title>
+  </head>
+  <body>
+    <div>
+    {% if category %}
+      <h1>{{ category.name }}</h1>
+      {% if pages %}
+        <ul>
+          {% for page in pages %}
+            <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+         <strong>当前分类没有内容.</strong>
+      {% endif %}
+    {% else %}
+      指定分类不存在
+    {% endif %}
+    </div>
+  </body>
+</html
+```
+
+上述 HTML 代码再次展示了如何通过 `{{ }}` 标签使用模板上下文中的数据。我们访问了 category和 pages 对象，以及它们的字段，例如 `category.name` 和 `page.url`。如果 category 存在，再检查分类下有没有网页。如果有，使用模板标签 `{% for page in pages %}`迭代网页，显示 pages 列表中各网页的 title 和 url 属性。网页的信息在一个 HTML 无序列表（` <ul>` 标签）中显示。
+
+#### 配置url(带参数的url)
+下面看看 category_name_slug 参数的值是如何传给 show_category() 视图函数的。打开 navigation 应用的 urls.py 文件
+
+```
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('about/', views.about, name='about'),
+    path('category/<slug:category_name_slug>/', views.show_category, name='show_category'),
+]
+```
+我们添加了一个 URL 
+
+`path('category/<slug:category_name_slug>/', views.show_category, name='show_category')`
+
+这里有两点要注意。首先， URL 模式中有个参数，即 `category_name_slug`，在视图中可以访
+问。声明带参数的 URL 时，要确保对应的视图中有那个参数。其次，<slug:category_name_slug>匹配连续的数字字母（即 a-z、 A-Z 或 0-9，）和连字符（-）
+
+新增的 URL 匹配 `navigation/category/` 和`末尾的 /` 之间的数字字母和连字符序列。匹配的序列存储在参数 category_name_slug 中，传给 views.show_category() 函数。例如，对 navigation/category/other-frameworks/ 这个 URL 来说， category_name_slug 参数的值是 other-frameworks。
+
+Django 应用中的视图函数必须至少有一个参数。这个参数通常命名为 request，通过它获取与HTTP 请求有关的信息。如果 URL 中带有参数，必须为对应的视图函数声明额外的具名参数。鉴于此， show_category() 视图才定义为 def show_category(request, category_name_slug)。
+
+[关于path详细用法](https://docs.djangoproject.com/en/2.2/topics/http/urls/)
+
+#### 修改 index 模板
+
+新视图可用了，但是还有一件事要做。我们要修改首页的模板，为列出的分类添加链接，指向分
+类页面。更新 index.html 模板，加入指向分类页面的链接。
+
+```
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head>
+    <title>Rango</title>
+  </head>
+  <body>
+    <h1>django说...</h1>
+    <div>大家好!</div>
+    <div>
+      {% if categories %}
+      <ul>
+        {% for category in categories %}
+        <!-- 修改下面这一行，添加链接 -->
+          <li>
+          <a href="/navigation/category/{{ category.slug }}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有分类.</strong>
+      {% endif %}
+    </div>
+    <div>
+      <a href="/navigation/about/">关于</a><br />
+      <img src="{% static "images/django.jpg" %}" alt="Picture of django" />
+    </div>
+  </body>
+</html>
+```
+
+这里也是使用 HTML `<ul>` 标签定义一个无序列表，里面有一系列列表项目（ `<li>`），其中有一个HTML 超链接（ `<a>`）。超链接有个 href 属性，其值为 /navigation/category/{{ category.slug }}。例如， “Python”分类对应的 URL 是 /rango/category/python/。
+
+访问首页检查下结果
+![img](./Chapter-08-code/pics/django7.jpg)
+
+点击python
+![img](./Chapter-08-code/pics/django8.jpg)
+
+### 练习
+1. 更新填充脚本，为各网页添加访问次数（ views 字段）。
+2. 修改首页，加上访问次数最多的 5 个网页。
+3. 为两块信息添加标题，分别为“最受喜欢的分类”和“访问最多的页面”。
+4. 在分类页面添加回到首页的链接。
+
+
+### 答案
+```
+# populate.py
+import os
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'first_project.settings')
+import django
+django.setup()
+
+from navigation.models import Category, Page
+
+def populate():
+    python_pages = [
+        {"title": "Official Python Tutorial",
+         "views": 20,
+         "url":"http://docs.python.org/2/tutorial/"},
+        {"title":"How to Think like a Computer Scientist",
+         "views": 12,
+         "url":"http://www.greenteapress.com/thinkpython/"},
+        {"title":"Learn Python in 10 Minutes",
+         "views": 15,
+         "url":"http://www.korokithakis.net/tutorials/python/"} ]
+
+    django_pages = [
+        {"title": "Official Django Tutorial",
+         "views": 15,
+         "url":"https://docs.djangoproject.com/en/1.9/intro/tutorial01/"},
+        {"title": "Django Rocks",
+         "views": 10,
+         "url": "http://www.djangorocks.com/"},
+        {"title": "How to Tango with Django",
+         "views": 10,
+         "url": "http://www.tangowithdjango.com/"}]
+    other_pages = [
+        {"title": "Bottle",
+         "views": 10,
+         "url":"http://bottlepy.org/docs/dev/"},
+        {"title": "Flask",
+         "views": 17,
+         "url": "http://flask.pocoo.org"}]
+
+    cats = {"Python": {"pages": python_pages},
+            "Django": {"pages": django_pages},
+            "Other Frameworks": {"pages": other_pages} }
+
+    for cat, cat_data in cats.items():
+        c = add_cat(cat)
+        for p in cat_data["pages"]:
+            # 修改
+            add_page(c, p["title"], p["url"],p["views"])
+
+    for c in Category.objects.all():
+        for p in Page.objects.filter(category=c):
+            print("- {0} - {1}".format(str(c),str(p)))
+
+
+def add_page(cat, title, url, views=0):
+    p = Page.objects.get_or_create(category=cat, title=title)[0]
+    p.url = url
+    p.views = views
+    p.save()
+    return p
+
+def add_cat(name):
+    if name == 'Python':
+        c = Category.objects.get_or_create(name=name,views=128,likes=64)[0]
+    elif name == "Django":
+        c = Category.objects.get_or_create(name=name, views=64, likes=32)[0]
+    elif name == "Other Frameworks":
+        c = Category.objects.get_or_create(name=name, views=32, likes=16)[0]
+    c.save()
+    return c
+
+if __name__ == '__main__':
+    print("开始导入数据")
+    populate()
+
+# views.py index视图
+def index(request):
+    # 查询数据库，获取目前存储的所有分类
+    # 按点赞次数倒序排列分类
+    # 获取前 5 个分类（如果分类数少于 5 个，那就获取全部）
+    # 把分类列表放入 context_dict 字典
+    # 稍后传给模板引擎
+    category_list = Category.objects.order_by('-likes')[:5]
+    context_dict = {'categories': category_list}
+    # 查询数据库，获取目前存储的所有页面
+    # 按点赞次数倒序排列分类
+    # 获取前 5 个页面（如果分类数少于 5 个，那就获取全部）
+    # 把分类列表放入 context_dict 字典
+    # 稍后传给模板引擎
+    page_list = Page.objects.order_by('-views')[:5]
+    context_dict["pages"] = page_list
+    # 渲染响应，发给客户端
+    return render(request, 'navigation/index.html', context_dict)
+
+# index 模板
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head>
+    <title>Rango</title>
+  </head>
+  <body>
+    <h1>django说...</h1>
+    <div>最受喜欢的分类</div>
+    <div>
+      {% if categories %}
+      <ul>
+        {% for category in categories %}
+          <li>
+          <a href="/navigation/category/{{ category.slug }}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有分类.</strong>
+      {% endif %}
+    </div>
+    <div>访问最多的网页</div>
+    <div>
+      {% if pages %}
+      <ul>
+        {% for page in pages %}
+          <li>
+          <a href="{{ page.url}}">{{page.title}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有页面.</strong>
+      {% endif %}
+    </div>
+    <div>
+      <a href="/navigation/about/">关于</a><br />
+      <img src="{% static "images/django.jpg" %}" alt="Picture of django" />
+    </div>
+  </body>
+</html>
+# category 模板
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>navigation</title>
+  </head>
+  <body>
+    <div>
+    {% if category %}
+      <h1>{{ category.name }}</h1>
+      {% if pages %}
+        <ul>
+          {% for page in pages %}
+            <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+         <strong>当前分类没有内容.</strong>
+      {% endif %}
+    {% else %}
+      指定分类不存在
+    {% endif %}
+    </div>
+    # 新增首页链接
+    <div>
+      <a href="/navigation/">首页</a><br />
+    </div>
+  </body>
+</html
+```
+##  模板进阶
+
+目前，我们为 navigation 应用的几个页面创建了 HTML 模板。你可能发现了，不同模板之间有很多
+HTML 代码是重复的，这违背了 DRY 原则。此外，你可能也注意到了，链接中使用的是硬编码
+的 URL 路径。这些问题会导致网站难以维护，倘若想改变网站的整体结构，或者调整 URL 路
+径，每个模板都要修改。
+
+### 相对url
+目前，模板中的链接地址使用的是硬编码的 URL，例如 <a href="/navigation/about/">关于</a>。这样做的缺点是一Ȁ修改了 urls.py 中的 URL 映射，就要更新对应的所有 URL 引用。正确的方法是使用模板标签 `{% url %}`查询 urls.py 文件中的 URL 模式，动态插入 URL 路径。
+
+在模板中使用相对 URL 十分简单。若想链接到关于页面，可以在模板中插入下面这行代码：
+`<a href="{% url 'about' %}">关于</a>`
+
+navigation 应用的 index.html 模板中有个带参数的 URL，即 /navigation/category/{{ category.slug }}。为了避免硬编码，我们可以使用 url 模板标签，并指定 URL（或视图）的名称和分类的别名，如下所示
+```
+        {% for category in categories %}
+          <li>
+          <a href="{% url 'show_category' category.slug %}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+```
+
+### 去重重复
+
+几乎每个专业的网站都有一系列重复的组件，例如页头、侧边栏和页脚，但是每个页面都重复编写这些组件的 HTML 显然是不明智的。试想，如果要调整网站的页头呢？你要修改每个页面，换用新的页头。这是个费时的工作，而且可能出现人为错误。为免浪费时间复制粘贴 HTML 标记，我们可以利用 Django 模板引擎提供的模板继承功能尽量避免重复。使用模板继承的基本步骤如下：
+
+1. 找出模板中重复出现的部分，例如页头、侧边栏、页脚和内容区。有时，你可以把各页面的结构画在纸上，这样便于找出通用的部分。
+2. 创建一个基模板（ base template），实现页面的基本骨架结构，提供通用的部分（例如页头的徽标和标题，页脚的版权声明），并定义一些区块（ block），以便在不同的页面调整所显示的内容。
+3. 为应用的不同页面创建专门的模板，都继承自基模板，然后指定各区块的内容
+
+
+#### 定义base模板
+
+显然，目前我们创建的模板有很多重复的 HTML 代码。下面把各页面显示的具体内容剔除，得到
+各模板重复使用的骨架结构。
+
+```
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head lang="en">
+    <meta charset="UTF-8" />
+    <title>Rango</title>
+  </head>
+  <body>
+    <!-- 各页面的具体内容 -->
+  </body>
+</html>
+```
+
+我们暂且把这个 HTML 页面作为 navigtion 应用的基模板。把上述代码保存在 templates/navigation/ 目录中的 base.html 文件里。
+
+#### 定义区块
+创建好基础模板之后，接下来要指明模板中的哪些部分可由继承它的模板覆盖。为此，要使用
+block 标签。例如，可以像下面这样在 base.html 模板中添加 body_block 区块
+
+```
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head lang="en">
+    <meta charset="UTF-8" />
+    <title>Rango</title>
+  </head>
+  <body>
+    {% block body_block %}
+    {% endblock %}
+  </body>
+</html>
+```
+
+Django 模板标签放在 {% 和 %} 之间。因此，区块以 {% block <NAME> %} 开头，其中<NAME> 是区块的名称。区块必须以 endblock 结尾，而且也要放在 {% 和 %} 之间，即 {% endblock %}。
+
+可以为区块指定默认内容，在子模板没有提供该区块的内容时使用。指定默认内容的方法是在 {% block %} 和 {% endblock %} 之间添加 HTML 标记，如下所示。
+```
+    {% block body_block %}
+      这是区块默认内容
+    {% endblock %}
+```
+
+创建各页面的模板时，我们将继承 navigation/base.html 模板，然后覆盖 body_block 区块的内容。模板中的区块数量不限，可以根据需要定义。例如，可以创建页面标题区块、页脚区块、侧边栏区块，等等。区块是 Django 模板系统一个特别强大的功能。
+
+#### 模板继承
+
+创建好基模板之后，接下来要更新其他模板，让它们继承基模板。先重构 navigation/index.html 模板。
+
+```
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+    <h1>django说...</h1>
+    <div>最受喜欢的分类</div>
+    <div>
+      {% if categories %}
+      <ul>
+        {% for category in categories %}
+          <li>
+          <a href="{% url 'show_category' category.slug %}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有分类.</strong>
+      {% endif %}
+    </div>
+    <div>访问最多的网页</div>
+    <div>
+      {% if pages %}
+      <ul>
+        {% for page in pages %}
+          <li>
+          <a href="{{ page.url}}">{{page.title}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有页面.</strong>
+      {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'about' %}">关于</a><br />
+      <img src="{% static "images/django.jpg" %}" alt="Picture of django" />
+    </div>
+{% endblock  %}
 ```
 
 ### 练习
-想一下，书有很多种语言中文，英语，法语。。。如何体现出书的语言？
-+ 我们需要添加一个新的模型language
-+ 关联到Book模型
+1. 重构catagroy模板
+2. 重构about模板
 
+### 答案
+```
+# catagroy.html
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+    <div>
+    {% if category %}
+      <h1>{{ category.name }}</h1>
+      {% if pages %}
+        <ul>
+          {% for page in pages %}
+            <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+         <strong>当前分类没有内容.</strong>
+      {% endif %}
+    {% else %}
+      指定分类不存在
+    {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'index' %}">首页</a><br />
+    </div>
+{% endblock  %}
+
+# about.html
+{% extends 'navigation/base.html' %}
+{% load staticfiles %} 
+{% block body_block %}
+    <h1>我们在一起了</h1>
+    
+    <div>
+      <a href="/navigation/">首页</a><br />
+      <img src="{% static "images/django.jpg" %}"
+           alt="Picture of django" /> 
+       <img src="/media/cat.jpg"
+           alt="Picture of cat" />
+    </div>
+{% endblock  %}
+```
+
+## 用户身份验证
+接下来介绍 Django 提供的用户身份验证机制。我们将使用 django.contrib.auth 包中
+的 auth 应用。
+
+这个应用提供了下述概念和功能：
+1. 用户和用户模型
+2. 权限，判断用户可以做什么及不可以做什么的旗标（是/否）
+3. 用户组，把相关权限一次赋予多个用户
+4. 可配置的密码哈希系统，保证数据安全不可或缺
+5. 登录或限制性内容所需的表单和视图
+
+### 设置身份验证
+
+在使用 Django 提供的身份验证机制之前，要在项目的 settings.py 文件中添加相关的设置。
+在 settings.py 文件中找到 INSTALLED_APPS 列表，检查有没有列出 django.contrib.auth 和
+django.contrib.contenttypes。 INSTALLED_APPS 列表应该类似下面这样：
 
 ```
-class Language(models.Model):
-    """
-    Model representing a Language (e.g. English, French, Japanese, etc.)
-    """
-    name = models.CharField(max_length=200, help_text="Enter a the book's natural language (e.g. English, French, Japanese etc.)")
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'navigation',
+]
+```
+
+django.contrib.auth 用于访问 Django 提供的身份验证系统，django.contrib.contenttypes 供auth 应用跟踪数据库中的模型。
+
+### User 模型
+
+User 对象（ django.contrib.auth.models.User）是 Django 身份验证系统的核心，表示与 Django应用交互的每个个体。根据 Django 文档，身份验证系统的很多方面都能用到 User 对象，例如访问限制、注册新用户，以及网站内容与创建者之间的关系。
+
+User 模型有 5 个主要属性：
+1. 用户账户的用户名（ username）
+2. 用户账户的密码（ password）
+3. 用户的电子邮件地址（ email）
+4. 用户的名字（ first_name）
+5. 用户的姓（ last_name）
+
+此外， User 模型还有其他属性，例如 is_active、 is_staff 和 is_superuser。这些属性的值都是布尔值，分别用于指明账户是否激活、是否为团队成员，以及是否拥有超级用户权限。
+
+### 增加用户属性
+除了 User 模型提供的属性之外，如果还需要其他用户相关的属性，要自己定义一个与 User 模型关联的模型。对 navigation 应用而言，我们想为用户账户增加两个属性：
+1. 一个 URLField，让 navigation 的用户设定自己的网站
+2. 一个 ImageField，让 navigation 的用户设定自己的头像
+
+为此，要在 navigation 应用的 models.py 文件中定义一个模型。我们把这个模型命名为 UserProfile。
+```
+class UserProfile(models.Model):
+    # 这一行是必须的
+    # 建立与 User 模型之间的一对一关系
+    user = models.OneToOneField(User,on_delete=models.CASCADE)
+    # 想增加的属性
+    website = models.URLField(blank=True)
+    picture = models.ImageField(upload_to='profile_images', blank=True)
     
     def __str__(self):
-        """
-        String for representing the Model object (in Admin site etc.)
-        """
-        return self.name
-
-Book模型添加
-language = models.ForeignKey('Language', on_delete=models.SET_NULL, null=True)
-```
- 
-## django admin
-现在我们已经为LocalLibrary网站创建了模型，我们将使用Django Admin网站添加一些“真实”的图书数据，首先，我们来看如何使用管理站点注册模型，然后来看如何登录和创建一些数据。在最后，我们将展示一些可以进一步改进Admin站点演示的方法
-
-Django管理应用程序可以使用你的模型自动构建可用于创建，查看，更新和删除记录的站点区域，这可以在开发过程中节省大量时间，使您可以非常轻松地测试模型并了解您是否拥有正确的数据。管理应用程序还可用于管理生产中的数据，具体取决于网站的类型。Django项目建议仅用于内部数据管理（即仅供管理员或组织内部人员使用），因为以模型为中心的方法不一定是所有用户最好的界面，并且暴露了大量不必要的细节关于模型。
-
-### Registering models
-
-首先，在应用程序(/locallibrary/catalog/admin.py)的目录中打开 admin.py 。如果它目前看起来像这样,注意它已经导入：django.contrib.admin
-```
-from django.contrib import admin
-
-# Register your models here.
-
+        return self.user.username
 ```
 
-导入models
-```
-from .models import Author, Genre, Book, BookInstance,Language
+注意，这个模型与 User 模型之间建立的一对一关系。因为引用了默认的 User 模型，所以要在
+models.py 文件中导入它：
 
-admin.site.register(Book)
-admin.site.register(Author)
-admin.site.register(Genre)
-admin.site.register(BookInstance)
-admin.site.register(Language)
-```
-###  创建一个superuser
-要登录管理站点，我们需要一个启用了员工状态的用户帐户。为了查看和创建记录，我们还需要此用户具有管理所有对象的权限。可以使用manage.py创建具有对站点的完全访问权限和所有所需权限的“超级用户”帐户
+`from django.contrib.auth.models import User`
 
+我们增加的 website 和 picture 字段都设定了 blank=True。因此这两个字段都可以为空，不是必须要提供值。此外，注意 ImageField 字段的 upload_to 参数。这个参数的值与项目的 MEDIA_ROOT 设置结合在一起，确定上传的头像存储在哪里。假如 MEDIA_ROOT 的值为first_project/media/， upload_to 参数的值为 profile_images，那么头像将存储在 first_project/media/profile_images/ 目录中。
+
+执行命令:
 ```
-python manage.py createsuperuser
+python manage.py makemigrations navigation
+python manage.py migrate
 ```
 
-### 高级配置
-Django使用注册模型中的信息创建基本管理站点做得非常好
-+ 每个模型都有一个单独的记录列表，由使用模型的__str __（）方法创建的字符串标识，并链接到详细视图/表单以进行编辑,默认情况下，此视图在顶部有一个操作菜单，可用于对记录执行批量删除操作.
-+ 用于编辑和添加记录的模型详细记录表单包含模型中的所有字段，这些字段按其声明顺序垂直排列
+Django 的 ImageField 字段要使用 Python Imaging Library（ PIL）。如果你还未安装，执行
+pip install pillow 命令，通过 pip 安装 PIL。
+`pip3 install pillow`
 
-你可以进一步自定义界面，使其更易于使用。你可以做的一些事情是
-+ List views
-  + 添加为每条记录显示的其他字段/信息
-  + 添加过滤器以根据日期或某些其他选择值（例如，借阅状态）选择列出的记录
-  + 将其他选项添加到列表视图中的操作菜单，并选择此菜单在表单上的显示位置
-+ Detail views
-  + 选择要显示（或排除）的字段及其顺序，分组，是否可编辑，使用的小部件，方向等。
-  + 将相关字段添加到记录以允许内联编辑（例如，在创建作者记录时添加添加和编辑书籍记录的功能）
+###  创建用户注册视图和模板
+实现用户注册功能的步骤如下：
+1. 定义 UserForm 和 UserProfileForm
+2. 添加一个视图，处理创建新用户的过程
+3. 创建一个模板，显示 UserForm 和 UserProfileForm
+4. 把 URL 映射到前面添加的视图上
+5. 最后，还要在首页添加一个链接，指向注册页面
 
-**Register a ModelAdmin class**
-
-要更改模型在管理界面中的显示方式，请定义ModelAdmin类（描述布局）并将其注册到模型中
-让我们从Authour模型开始。在应用程序目录中打开admin.py（/locallibrary/catalog/admin.py）。注释Authour模型的注册：
+#### 定义 UserForm 和 UserProfileForm
+我们要在 navigation/forms.py 中定义两个类，继承自 forms.ModelForm。其中一个针对 User 类，另一个针对前面定义的 UserProfile 模型。这两个 ModelForm 子类创建的 HTML 表单用于显示相应模型的字段，为我们节省了很多工作量
 
 ```
-# admin.site.register(Author)
+class UserForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput())
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ('website', 'picture')
+```
+注意，这两个类中都有 Meta 类。如其名所示， Meta 类的作用是为所在的类提供额外的属性。 Meta
+类中必须有 model 字段。 UserForm 类对应的模型是 User。此外，还要通过 fields 或 exclude 指定要在表单中显示或排除的字段
+
+这里，我们只想显示 User 模型的 username、 email 和 password 字段，以及 UserProfile 模型的website 和 picture 字段。 UserProfile 模型的 user 字段在注册用户时设定。这是因为创建UserProfile 实例时，还没有 User 实例可用。此外，注意 UserForm 中定义了 password 属性。虽然 User 模型实例有 password 属性，但是在渲染的 HTML 表单中这个字段的值不会被遮盖，用户输入的密码是可见的。鉴于此，我们重新定义了assword 属性，指定使用 PasswordInput() 小组件显示这个 CharField，以防用户输入的密码被人窥见。最后，别忘了在 forms.py 模块的顶部导入所需的类。为了便于你参考，下面给出导入语句：
+```
+from django import forms
+from django.contrib.auth.models import User
+from navigation.models import UserProfile 
 ```
 
-现在添加一个新的AuthorAdmin和注册，如下所示
+
+### 定义 register() 视图
+
+接下来要渲染表单及处理表单数据。在 Rango 应用的 views.py 模块中，添加一个 import 语句，导入新定义的 UserForm 和 UserProfileForm 类。
+`from navigation.forms import UserForm, UserProfileForm`
+然后定义 register() 视图：
 ```
-# Define the admin class
-class AuthorAdmin(admin.ModelAdmin):
-    pass
-
-# Register the admin class with the associated model
-admin.site.register(Author, AuthorAdmin)
-```
-现在我们将为Book和BookInstance添加ModelAdmin类。我们再次需要注释掉注册
-```
-#admin.site.register(Book)
-#admin.site.register(BookInstance)
-```
-现在创建并注册新模型;为了演示的目的，我们将使用@register装饰器来注册模型（这与admin.site.register（）语法完全相同）：
-
-```
-# Register the Admin classes for Book using the decorator
-
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    pass
-
-# Register the Admin classes for BookInstance using the decorator
-
-@admin.register(BookInstance) 
-class BookInstanceAdmin(admin.ModelAdmin):
-    pass
-```
-
-目前我们所有的管理类都是空的，因此django-admin行为将保持不变！我们现在可以扩展它们来定义我们特定于模型的管理行为
-
-**Configure list views**
-
-对于Authour模型localLibrary当前列出了使用从模型__str __()方法生成的对象名称的所有authour,当你只有一些作者时这很好，但是一旦你有很多作者，你可能会有重复。要区分它们，或者仅仅因为想要显示有关每个作者的更多有趣信息，你可以使用list_display向视图添加其他字段
-
-```
-class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'date_of_birth', 'date_of_death')
-```
-
-对于我们的Book模型，我们还将显示author和类别
-```
-class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'display_genre')
-```
-遗憾的是，我们无法直接在list_display中指定类型字段，因为它是ManyToManyField。我们将定义一个display_genre函数来将信息作为字符串获取
-
-将以下代码添加到Book模型（models.py）中。这将从类型字段的前三个值（如果存在）创建一个字符串，并创建一个short_description，管理站点列中显示列名。
-
-```
-def display_genre(self):
-        """
-        Creates a string for the Genre. This is required to display genre in Admin.
-        """
-        return ', '.join([ genre.name for genre in self.genre.all()[:3] ])
-    display_genre.short_description = 'Genre'
-```
-**Add list filters**
-
-一旦列表中有很多记录，就可以过滤显示哪些记录。这是通过列出list_filter属性中的字段来完成的。用下面的代码片段替换当前的BookInstanceAdmin类
-
-```
-list_filter = ('status', 'due_back')
+def register(request):
+    # 一个布尔值，告诉模板注册是否成功
+    # 一开始设为 False，注册成功后改为 True
+    registered = False
+    # 如果是 HTTP POST 请求，处理表单数据
+    if request.method == 'POST':
+        # 尝试获取原始表单数据
+        # 注意， UserForm 和 UserProfileForm 中的数据都需要
+        user_form = UserForm(data=request.POST)
+        profile_form = UserProfileForm(data=request.POST)
+        # 如果两个表单中的数据是有效的……
+        if user_form.is_valid() and profile_form.is_valid():
+            # 把 UserForm 中的数据存入数据库
+            user = user_form.save()
+            # 使用 set_password 方法计算密码哈希值
+            # 然后更新 user 对象
+            user.set_password(user.password)
+            user.save()
+            # 现在处理 UserProfile 实例
+            # 因为要自行处理 user 属性，所以设定 commit=False
+            # 延迟保存模型，以防出现完整性问题
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            # 用户提供头像了吗？
+            # 如果提供了，从表单数据库中提取出来，赋给 UserProfile 模型
+            if 'picture' in request.FILES:
+                profile.picture = request.FILES['picture']
+                # 保存 UserProfile 模型实例
+            profile.save()
+            # 更新变量的值，告诉模板成功注册了
+            registered = True
+        else:
+            # 表单数据无效，出错了
+            # 在终端打印问题
+            print(user_form.errors, profile_form.errors)
+    else:
+        # 不是 HTTP POST 请求，渲染两个 ModelForm 实例
+        # 表单为空，待用户填写
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+    # 根据上下文渲染模板
+    return render(request,
+                  'navigation/register.html',
+                  {'user_form': user_form,
+                  'profile_form': profile_form,
+                  'registered': registered})
 ```
 
-**Detail view**
-
-默认情况下，详细视图按照其在模型中声明的顺序垂直排列所有字段。你可以更改声明的顺序，哪些字段显示（或排除），区段是否用于组织信息，字段是水平还是垂直显示，甚至是管理窗体中使用的编辑窗口小部件
-
-**控制哪些字段被显示和布局**
-更新您的  AuthorAdmin 类，如下所示：
-```
-class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'date_of_birth', 'date_of_death')
-    fields = ['first_name', 'last_name', ('date_of_birth', 'date_of_death')]
-```
-
-fields控制表单上显示字段的顺序，表单中的字段默认按model中的顺序列出，定义fields后按fields里面的顺序列出。
-字段默认垂直显示，但是多个字段放在元组中后，多个字段展示在一行
-
-** 将详细视图分为多个部分**
-
-在  BookInstance详细视图中，我们将name，imprint，id和status，due_back分成两部分.每个部分都有自己的标题,None为空标题
+### 创建注册页面的模板
+现在要创建 register() 视图的模板。新建 navigation/register.html 文件，写入下述代码
 
 ```
-@admin.register(BookInstance)
-class BookInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('status', 'due_back')
-    
-    fieldsets = (
-        (None, {
-            'fields': ('book','imprint', 'id')
-        }),
-        ('Availability', {
-            'fields': ('status', 'due_back')
-        }),
-    )
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+  <h1>注册</h1>
+  {% if registered %}
+  <strong>感谢注册</strong>
+  <a href="{% url 'index' %}">返回首页</a><br />
+  {% else %}
+  <strong>在此注册！</strong><br />
+  <form id="user_form" method="post" action="{% url 'register' %}"
+       enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <!-- 显示每个表单 -->
+    <!--
+    {{ user_form.as_p }}
+    {{ profile_form.as_p }}-->
+    <p><label for="id_username">用户名:</label> {{ user_form.username }}</p>
+    <p><label for="id_email">邮箱地址:</label> {{ user_form.email }} </p>
+    <p><label for="id_password">密码:</label> {{ user_form.password}} </p>
+    <p><label for="id_website">个人网站:</label> {{ profile_form.website }} </p>
+    <p><label for="id_picture">头像:</label> {{profile_form.picture}} </p>
+
+    <!-- 提供一个按钮，点击后提交表单 -->
+     <input type="submit" name="submit" value="Register" />
+    </form>
+  {% endif %}
+{% endblock %}
 ```
 
-**内联编辑**
-```
-class BooksInstanceInline(admin.TabularInline):
-    model = BookInstance
+注意，这个模板使用视图中的 registered 变量判断注册是否成功。 registered 的值为 False 时，显示注册表单；否则，显示成功注册消息。此外，我们在 user_form 和 profile_form 上调用了 as_p 模板函数。这么做的目的是在段落（ HTML `<p>` 标签）中显示各个表单元素，一行显示一个表单元素。最后注意，我们为` <form>` 元素设定了 enctype 属性。这是因为，如果用户想上传头像，表单数据中将包含二进制数据，而且可能相当大。传给服务器时，这些数据要分成几部分。因此，我们要设定 enctype="multipart/form-data"，让 HTTP 客户端（ Web 浏览器）分段打包和发送数据。如若不然，服务器收不到用户提交的全部数据。
 
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'display_genre')
-    inlines = [BooksInstanceInline]
+在表单中添加 CSRF 令牌，即 `{% csrf_token %}`。否则， Django 的跨站请求伪造保
+护中间件将拒绝接收表单的内容，返回错误
+
+### 添加 URL 映射
+有了视图和对应的模板之后，现在可以添加 URL 映射了。打开 navigation 应用的 urls.py 模块，根据下述代码修改
+
 ```
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('about/', views.about, name='about'),
+    path('category/<slug:category_name_slug>/', views.show_category, name='show_category'),
+    path('register/',views.register,name='register'), 
+]
+```
+
+新增的模式把 /navigation/register/ URL 映射到 register() 视图上。注意，我们为这个新模式设定了
+name 参数，以便在模板中使用 url 引用，例如 {% url 'register' %}
+
+### 添加链接
+最后，在 base.html 模板中添加一个链接，指向注册页面。参照下述代码更新无序列表中的链接，
+在 navigation 应用的每个页面中都添加指向注册页面的链接。
+
+```
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+  <head lang="en">
+    <meta charset="UTF-8" />
+    <title>Navigation</title>
+  </head>
+  <body>
+    {% block body_block %}
+      这是区块默认内容
+    {% endblock %}
+    <ul>
+      <li><a href="{% url 'about' %}">关于</a></li>
+      <li><a href="{% url 'index' %}">首页</a></li>
+      <li><a href="{% url 'register' %}">注册</a></li>
+    </ul>
+  </body>
+</html>
+```
+
+### 实现登录功能
+
+用户能注册账户之后，接下来要让用户能够登录。为此，要执行以下几步：
+1. 定义一个视图，处理登录凭据
+2. 创建一个模板，显示登录表单
+3. 把登录视图映射到一个 URL 上
+4. 在首页添加登录链接
+
+#### 定义登录视图
+
+首先，打开 navigation 应用的 views.py 模块，定义一个新视图，名为 user_login()。这个视图负责处
+理登录表单提交的数据，以及登入用户。
+
+```
+def user_login(request):
+    # 如果是 HTTP POST 请求，尝试提取相关信息
+    if request.method == 'POST':
+        # 获取用户在登录表单中输入的用户名和密码
+        # 我们使用的是 request.POST.get('<variable>')
+        # 而不是 request.POST['<variable>']
+        # 这是因为对应的值不存在时，前者返回 None，
+        # 而后者抛出 KeyError 异常
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        # 使用 Django 提供的函数检查 username/password 是否有效
+        # 如果有效，返回一个 User 对象
+        user = authenticate(username=username, password=password)
+        # 如果得到了 User 对象，说明用户输入的凭据是对的
+        # 如果是 None（ Python 表示没有值的方式），说明没找到与凭据匹配的用户
+        if user:
+        # 账户激活了吗？可能被禁了
+            if user.is_active:
+                # 登入有效且已激活的账户
+                # 然后重定向到首页
+                login(request, user)
+                return redirect(reverse('index'))
+            else:
+                # 账户未激活，禁止登录
+                return HttpResponse("Your Rango account is disabled.")
+        else:
+            # 提供的登录凭据有问题，不能登录
+            print("Invalid login details: {0}, {1}".format(username, password))
+            return HttpResponse("Invalid login details supplied.")
+    # 不是 HTTP POST 请求，显示登录表单
+    # 极有可能是 HTTP GET 请求
+    else:
+        # 没什么上下文变量要传给模板系统
+        # 因此传入一个空字典
+        return render(request, 'navigation/login.html', {})
+```
+
+跟之前一样，因为要处理不同的情况，这个视图看起来十分复杂。从上述代码可以看出，user_login() 视图既能渲染登录表单（包含 username 和 password 两个字段），也能处理表单数据。
+
+如果通过 HTTP GET 方法访问这个视图，显示登录表单。然而，如果通过 HTTP POST 请求访问，则处理表单数据。如果通过 POST 请求发送有效的表单数据，从中提取用户名和密码。
+
+然后使用 Django 提供authenticate() 函数检查用户名和密码是否匹配某个用户账户。如果能找到这样的用户，返回一个 User 对象，否则返回 None。返回 User 对象时，检查账户是否激活。如果是激活的，调用 Django 提供的 login() 函数，登入用户。然而，如果发送的表达数据无效，例如用户名和密码没有都填，登录表单显示错误消息，提示用户名或密码无效。
+
+redirect函数，从名称可以看出，redirect 函数生成的响应让 Web 浏览器重定向到参数指定的 URL。注意，响应的HTTP 状态码是表示重定向的 302，而不是表示成功的 200
+login 函数，把用户的状态修改为登录。authenticate 函数判断用户的账号密码是否正确，正确返回用户对象，错误返回None
+reverse函数 使用urls.py 中的name 生成相应的url
+
+这里的几个函数需要导入
+```
+from django.shortcuts import redirect, reverse
+from django.contrib.auth import authenticate, login
+```
+
+#### 创建登录模板
+有了视图之后，我们还要创建一个模板，让用户输入登录凭据。现在你应该知道要把模板放在
+templates/navigation/目录中,根据user_login视图函数，你来确定下模板的名称
+
+```
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+<h1>Login to navigation</h1>
+<form id="login_form" method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    用户名: <input type="text" name="username" value="" size="50" />
+    <br />
+    密码: <input type="password" name="password" value="" size="50" />
+    <br />
+    <input type="submit" value="登录" />
+</form>
+{% endblock %}
+```
+
+input 元素的 name 属性要与 user_login() 视图中的保持一致。也就是说，用户名输入框的 name属性的值应该是 username，而密码输入框的 name 属性的值应该是 password。此外，别忘了 {% csrf_token %}。
+
+#### 添加url
+
+创建好登录模板之后，接下来要把 user_login() 视图映射到一个 URL 上。修改 navigation 应用的urls.py 模块，在 urlpatterns 列表中添加下述映射：
+
+`path('login/', views.user_login, name='login'),`
+
+#### 添加链接
+
+最后，添加一个链接，方便 Rango 的用户访问登录页面。编辑 templates/navigation/ 目录中的 base.html,在无序列表中添加下述链接：
+`<li><a href="{% url 'login' %}">登录</a></li>`
+
+还可以修改首页的页头，向已登录的用户显示独特的欢迎消息，而未登录的用户则显
+示一般的欢迎消息。在 index.html 模板中修改为：
+```
+<h1>django说...
+    {% if user.is_authenticated %}
+       {{ user.username }}!
+    {% else %}
+      游客!
+    {% endif %}</h1>
+```
+
+可以看出，我们使用 {% if user.is_authenticated %} 检查用户是否通过身份验证。如果用户已登录，我们能访问 user 对象。因此，我们可以通过这个对象判断用户是否登录（验证身份）。如果用户已登录，我们便能获取关于用户的更多信息。在这个示例中，当用户登录后，我们获取用户的用户名。如果用户未登录，则显示一般的欢迎消息
+
+至此，用户登录功能可用了。请启动 Django 开发服务器，注册一个新账户试试。成功注册后，你
+应该能使用自己设定的凭据登录。
+
+#### 限制访问
+
+使用装饰器限制未登录用户访问分类详情页面在show_category 视图函数上添加装饰器login_required
+```
+@login_required
+def show_category(request, category_name_slug):
+```
+需要导入装饰器
+`from django.contrib.auth.decorators import login_required`
+
+
+#### 设置跳转登录页面
+使用login_required装饰器时，如果未登录，默认会被重定向到/accounts/login/，这样会导致404
+在settings.py中添加一行
+
+`LOGIN_URL='/navigation/login/'`
+
+LOGIN_URL 指定自己的登录url
+
+### 退出
+
+用户能注册和登录之后，还要能退出。 Django 提供的 logout() 函数能确保用户正确且安全地退出。用户的会话结束后，如果再想访问受限制的视图，要重新登录。为了提供退出功能，打开 rango/views.py 文件，添加名为 user_logout() 的视图，代码如下：
+
+```
+# 使用 login_required() 装饰器限制
+# 只有已登录的用户才能访问这个视图
+@login_required
+def user_logout(request):
+    # 可以确定用户已登录，因此直接退出
+    logout(request)
+    # 把用户带回首页
+    return redirect(reverse('index'))
+```
+
+需要在 views.py 模块的顶部导入 logout() 函数：
+`from django.contrib.auth import logout`
+
+接下来，修改 navigation 应用的 urls.py 模块，把 URL /navigation/logout/ 映射到 user_logout() 视图
+
+`path('logout/', views.user_logout, name='logout'),`
+
+在base.html模板调整链接
+
+```
+<ul>
+      <li><a href="{% url 'about' %}">关于</a></li>
+      <li><a href="{% url 'index' %}">首页</a></li>
+      
+      
+      {% if user.is_authenticated %}
+          <li><a href="{% url 'logout' %}">退出</a></li>
+      {% else %}
+        <li><a href="{% url 'register' %}">注册</a></li>
+        <li><a href="{% url 'login' %}">登录</a></li>
+      {% endif %}
+    </ul>
+```
+
+## cookie和会话
+
+Web 浏览器（客户端）与服务器之间的通信都借由 HTTP 协议。前面说过， HTTP 是无状态的协议。因此， Web 浏览器所在的客户端电脑每次请求服务器中的资源（ HTTP GET）或者把资源发给服务器（ HTTP POST）都要建立新的网络连接（ TCP 连接）。
+
+由于客户端和服务器之间无法建立持久连接，所以两端的软件都不能只依靠连接维持会话状态。例如，客户端发送的每个请求都要指明哪个用户在当前电脑上已登录 Web 应用。这是客户端与服务器之间的一种对话，是半永久性信息交互机制（即会话）的基础。
+
+维持状态最常用的一种方式是在客户端电脑的 cookie 中存储会话 ID。你可以把会话 ID 理解为一种令牌（一串字符，或一个字符串），我们通过它唯一标识 Web 应用中的会话。这种方式无需在客户端的 cookie 中存储大量信息（例如用户名、姓名或密码），存储的只是会话 ID。通过这个ID 可以从 Web 服务器中获取包含所需信息的数据结构。通过这种方式存储用户的信息更安全，不会由于客户端的漏洞或者连接被监听而导致信息泄露。
+
+### 在 Django 中设置session
+
+请打开 Django 项目的 settings.py 文件，找到 MIDDLEWARE 列表。这个列表中应该有个元素是 django.contrib.sessions.middleware.SessionMiddleware。如果没有，请自己动手加上。 sessionid cookie 就是由 SessionMiddleware 中间件创建的。SessionMiddleware 中间件支持多种存储会话信息的方式，可以存在文件中、数据库中，甚至是内存中。最简单的方法是使用 django.contrib.sessions 应用，把会话信息存储在模型/数据库中（模型为 django.contrib.sessions.models.Session）。若想使用这种方法， Django 项目的INSTALLED_APPS 设置中还要列出 django.contrib.sessions。别忘了，添加这个应用后还要使用迁移命令更新数据库
+
+### 客户端 cookie：访问次数统计示例
+
+知道 cookie 的工作原理之后，下面来实现一个非常简单的网站访问次数统计功能。为此，我们要创建两个 cookie：一个记录用户访问 navigation 应用的次数，另一个记录用户最后一次访问网站的时间。之所以记录最后访问时间，是因为我们只想1s增加一次访问次数，以防有人恶意刷次数
+
+假设有用户访问 navigation 应用的合理位置是首页。我们要定义一个函数，传入 request 和 response
+对象，让它处理 cookie。然后在 navigation 应用的 index() 视图中调用。打开 navigation 应用的 views.py
+文件，添加下述函数。注意，严格来说这不是视图函数，而是个辅助函数，因为它不返回
+response 对象
+
+```
+def visitor_cookie_handler(request, response):
+    # 获取网站的访问次数
+    # 使用 COOKIES.get() 函数读取“visits”cookie
+    # 如果目标 cookie 存在，把值转换为整数
+    # 如果目标 cookie 不存在，返回默认值 1
+    visits = int(request.COOKIES.get('visits', '1'))
+    last_visit_cookie = request.COOKIES.get('last_visit', str(datetime.now()))
+    last_visit_time = datetime.strptime(last_visit_cookie[:-7],'%Y-%m-%d %H:%M:%S')
+    # 如果距上次访问已超过1s……
+    if (datetime.now() - last_visit_time).seconds > 0:
+        visits = visits + 1
+        # 增加访问次数后更新“last_visit”cookie
+        response.set_cookie('last_visit', str(datetime.now()))
+    else:
+        # 设定“last_visit”cookie
+        response.set_cookie('last_visit', last_visit_cookie)
+        # 更新或设定“visits”cookie
+    response.set_cookie('visits', visits)
+```
+
+这个辅助函数的参数有两个，分别为 request 和 response 对象，因为我们既需要从入站请求中读取 cookie，也需要把 cookie 添加到响应中。在这个函数中，我们调用了 request.COOKIES.get()函数，这也是一个辅助函数，由 Django 提供。如果指定的 cookie 存在， COOKIES.get() 函数返回cookie 的值；如果不存在，我们可以提供一个默认值。
+
+得到两个 cookie 的值之后，计算两次访问的间隔有没有超过1s。只要相差一秒就能更新访问次数。
+
+注意，所有 cookie 的值都是字符串。不要以为存储整数的 cookie 会返回整数类型的值。你要自行转换为正确的类型，因为 cookie 并不知道它存储的值是什么类型。
+
+如果 cookie 不存在，可以在 response 对象上调用 set_cookie() 方法，创建一个 cookie。这个方法接受两个参数，一个是想创建的 cookie 名称（字符串形式），另一个是 cookie 的值。传入的cookie 值不限类型， set_cookie() 方法会自动将其转换为字符串。这个函数用到了 datetime 模块，因此要在 views.py 文件的顶部将其导入。
+
+`from datetime import datetime`
+
+然后更新 index() 视图，调用 visitor_cookie_handler() 辅助函数。为此，要先提取得到
+response 对象。
 
