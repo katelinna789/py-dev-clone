@@ -1,626 +1,1043 @@
 # 第九天
+实战http接口测试平台HAT
 
-## 创建主页
+## 功能模块
 
-我们现在可以添加代码来显示我们的第一个完整页面 -  LocalLibrary 网站的主页，显示每个模型类型有多少条记录，并提供我们其他页面的侧边栏导航链接。我们将编写基本URL映射和视图，从数据库获取记录以及使用模板展示
++ 项目管理
++ 模块管理
++ 用例管理
++ 套件管理
++ 报告管理
++ 定时任务
++ 性能测试
 
-现在我们已经定义了我们的模型，并创建了一些数据，现在是编写代码以向用户呈现该信息的时候了。我们需要做的第一件事是确定我们希望能够在我们的页面中显示哪些信息，然后为返回这些资源定义适当的URL。那么我们将需要创建一个url映射器，视图和模板来显示这些页面。
+## 系统架构
 
-以下图表提供了处理HTTP请求/响应时需要实现的数据和事情的主要流程。我们已经创建了这个模型，我们需要创建的主要内容是：
+![img](./Chapter-09-code/pics/arch.jpg)
 
-+ URL映射-根据匹配的URL转到相应的View功能。
-+ View 函数从模型 获取请求的数据，创建一个显示数据的HTML页面，并将其返回给用户在浏览器查看。
-+ 模板用来渲染view的数据
 
-![img](./Chapter-09-code/basic-django.png)
+## 相关知识
++ rabbitmq 消息队列
++ celery  分布式任务系统
++ httprunner 接口测试框架
 
-### 定义资源URL
-我们要为该网站提供一个登录页，以及显示书和作者的列表和详细视图的页面。
-下面这些URL 是我们页面需要的
-+ catalog/ — 主页
-+ catalog/books/ — 书单页 列表视图
-+ catalog/authors/ — 作者页 列表视图
-+ catalog/book/<id> —详细视图。如下例子 ／catalog/book/3，id为3的书的详情
-+ catalog/author/<id> — 详细视图。如下例子 /catalog/author/11，id为11的作者详情
 
-### 创建主页
-打开locallibrary/catalog/urls.py 修改以下内容
+## 新建项目
+
+1. 创建项目 
+
+    `django-admin startproject hat`
+
+2. 创建app
+
+    `python  manage.py startapp httpapitest`
+
+3. 修改settings.py 添加 httpapitest到 INSTALLED_APPS
 
 ```
-urlpatterns = [
-    path('', views.index, name='index'),
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'httpapitest',
 ]
 ```
 
-path()函数定义了一个URL模式（在这种情况下是一个空字符串：''），在匹配到模式时将调用的视图函数（views.index - views.py中名为index()的函数）。
+4. 启动开发服务器
 
-此path()函数还指定name参数，该参数唯一标识此特定URL映射。以使用此name“反转”映射器 - 动态创建指向映射器的资源的URL
-例如，有了这个，我们现在可以通过在模板中创建以下链接从任何其他页面链接到我们的主页
+    `python manage.py runserver`
+
+访问127.0.0.1:8000，显示django界面说明，一切ok
+5. 创建数据库
+
+    `CREATE DATABASE `hat` /*!40100 DEFAULT CHARACTER SET utf8 */;`
+
+6. 配置mysql数据库
+
+修改settings.py
 ```
-<a href="{% url 'index' %}">Home</a>
+DATABASES = {
+    #'default': {
+    #    'ENGINE': 'django.db.backends.sqlite3',
+    #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #}
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'hat',  # 新建数据库名
+        'USER': 'root',  # 数据库登录名
+        'PASSWORD': '',  # 数据库登录密码
+        'HOST': '127.0.0.1',  # 数据库所在服务器ip地址
+        'PORT': '3306',  # 监听端口 默认3306即可
+        }
+}
 ```
 
-我们可以对上面的链接进行硬编码（例如`<a href="/catalog/">主页</a>`），但如果我们更改了主页的模式（例如更改为/ catalog/index），模板将不再正确链接。使用反向url映射更加灵活和强大！
+6. 首次migrate,
+    
+    `python  manage.py migrate`
 
-### View (基于函数)
 
-视图是处理HTTP请求的功能，根据需要从数据库获取数据，通过使用HTML模板呈现此数据生成HTML页面，然后以HTTP响应返回HTML以显示给用户。索引视图遵循此模型 - 它提取有关数据库中有多少Book，BookInstance 可用 BookInstance 和 Author 记录的信息，并将其传递给模板以进行显示。
+7. 配置静态文件路径
 
-打开catalog/views.py，并注意该文件已经导入了 使用模板和数据生成HTML文件的 render() 快捷方式函数。
+```
+STATIC_URL = '/static/'
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [STATIC_DIR, 
+```
+在manage.py同级目录创建static目录
+
+8. 配置模板路径
+
+```
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [TEMPLATE_DIR,],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+            ],
+        },
+    },
+]
+```
+
+在manage.py同级目录创建static目录,创建templates目录
+
+9. 配置项目目录下的urls.py 将匹配/httapitest的url 路由到app httpapitest的urls.py
+```
+from django.contrib import admin
+from django.urls import path, include
+from httpapitest import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('',views.index),
+    path('httpapitest', include('httpapitest.urls')),
+    
+]
+```
+此时runserver会报错，因为没有index视图函数
+
+10. 在httpapitest目录下新建urls.py文件
+```
+
+from django.urls import path
+from httpapitest import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    
+]
+```
+此时runserver会报错，因为没有index视图函数
+
+11. 创建第一个视图index
 
 ```
 from django.shortcuts import render
+from django.shortcuts import HttpResponse
 
 # Create your views here.
-```
-复制以下代码。第一行导入我们将用于访问所有视图中数据的模型类
-```
-from .models import Book, Author, BookInstance, Genre
-
 def index(request):
-    """
-    首页视图
-    """
-    # 统计图书的数目
-    num_books=Book.objects.all().count()
-    num_instances=BookInstance.objects.all().count()
-    # 可接图书的数目 (status = 'a')
-    num_instances_available=BookInstance.objects.filter(status__exact='a').count()
-    num_authors=Author.objects.count()  # 作者的数目
-    
-    # 渲染模板
-    return render(
-        request,
-        'index.html',
-        context={'num_books':num_books,'num_instances':num_instances,'num_instances_available':num_instances_available,'num_authors':num_authors},
-    )
+    return HttpResponse("hello hat")
 
 ```
+打开http://127.0.0.1:8000 查看
 
-视图函数的第一部分使用objects.all()模型类的属性来获取记录计数。它还会获取一个BookInstance状态字段值为“a”（可用）的对象列表。在函数结束时，我们将该函数称为render()创建和返回HTML页面作为响应。它将原始request对象，HTML模板以及context变量（Python字典）作为参数。
+## 测试项目管理
+实现项目的增删改查功能
 
-### Template（模板）
+### 搭建网站页面架构
 
-模版是定义一个文件（例如HTML页面）的结构与布局的文本文件，。Django将自动在应用程序“templates”目录查找模版。例如，在我们刚刚加的索引页，render() 函数会期望能够找到/locallibrary/catalog/templates/index.html这个文件，如何找不到该文件，则会引发错误。你可以看到访问 127.0.0.1:8000 现在将提供你一个相当直观的错误信息"TemplateDoesNotExist at /catalog/“以及其他详细信息
-
-**扩展模版**
-
-index模版将需要标准的HTML标记头部和正文，以及用于导航的部分（去我们尚为创建的网站其他的页面）以及一些介绍文本来展示我们图书数据。我们网站上的每一页，大部分文字（HTML和导航结构）都是一样的。Django模版语言不是强制开发人员在每个页面中复制这个“样板”，而是让你声明一个基本模版，然后再扩展它，仅替换每个特定页面不同的位置。
-
-例如，基本模版 base.html 可能看起来像下面的文本。正如你所见的，它包含一些“常见“HTML”和标题，侧边栏和使用命名 block 和 endblock 模版标记（粗体显示）标记的内容部分。块可以是空的，或者包含将被派生页“默认使用”的内容。
-
- 模版标签（{% %}）,你可以在模版中使用函数循环列表，基于变量的值执行条件操作等。除了模版标签，模版语法允许你引用模版变量（通过从视图进入模版），并使用模版过滤器重新格式化变量（例如，将字符串设置为小写）。
-
+创建base.html 模板
 ```
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  {% block title %}<title>Local Library</title>{% endblock %}
-</head>
-
-<body>
-  {% block sidebar %}<!-- insert default navigation text for every page -->{% endblock %}
-  {% block content %}<!-- default content text (typically empty) -->{% endblock %}
-</body>
-</html>
-```
-当我们要为特定视图定义一个模版时，我们首先指定基本模版（使用 extends 模版标签）。如果我们想要在模版中替换的部分，会使用 block/endblock 在基本模版表明。
-
-例如，下面我们使用 extends 模版标签，并覆盖 content 块。生成的最终HTML将包含在基本模板中定义的所有HTML和结构（包括在标题栏中定义的默认内容），但插入新内容块代替默认内容块
-
-```
-{% extends "base.html" %}
-
-{% block content %}
-<h1>Local Library Home</h1>
-<p>Welcome to <em>LocalLibrary</em>, a very basic Django website developed as a tutorial example on the Mozilla Developer Network.</p>
-{% endblock %}
-```
-
-**LocalLibrary基本模板**
-
-下面就是我们的基本模版。正如所看到的，内容包括一些HTML和定义块 title ，sidebar 和 content。我们有默认的 title（当然我们可以改）和默认的所以图书和作者的链接列表 sidebar （我们可能并不会怎么改，但需要时，我们通过把想法放入块block中，比如想法是—允许范围）。创建一个新的文件 — locallibrary/catalog/templates/base_generic.html — 写入如下代码
-```
-<!DOCTYPE html>
-<html lang="en">
-
+<!doctype html>
+<html class="no-js" lang="zh-CN">
 <head>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <title>{% block title %}{% endblock %}</title>
+    <meta name="keywords" content="index">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
 
-    <title>SB Admin - Dashboard</title>
+    {% load staticfiles %}
+    <meta name="apple-mobile-web-app-title" content="HAT"/>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap-fileinput/4.4.8/css/fileinput.css"/>
+    <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap-fileinput/4.4.8/js/fileinput.js"></script>
+    <script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap-fileinput/4.4.8/js/fileinput.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap-fileinput/4.4.8/css/fileinput.min.css"/>
 
-    <!-- Bootstrap core CSS-->
-    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.min.css"/>
+    <link rel="stylesheet" href="{% static 'assets/css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
 
-    <!-- Custom fonts for this template-->
-    <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"></script>
+    <script src="https://cdn.bootcss.com/ace/1.2.6/ace.js" type="text/javascript"
+            charset="utf-8"></script>
+    <script src="https://cdn.bootcss.com/ace/1.2.6/ext-language_tools.js" type="text/javascript"
+            charset="utf-8"></script>
+    <script src="//apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    <script src="{% static 'assets/js/commons.js' %}"></script>
 
-    <!-- Custom styles for this template-->
-    <link href="/static/css/sb-admin.css" rel="stylesheet">
 
 </head>
-
-<body id="page-top">
-
-    <nav class="navbar navbar-expand navbar-dark  bg-dark static-top">
-
-        <a class="navbar-brand mr-1" href="{% url "index" %}">图书管理平台</a>
-
-        <button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
-            <i class="fas fa-bars"></i>
-        </button>
+<body class="modal-open">
 
 
-        <!-- Navbar -->
-        <ul class="navbar-nav  ml-auto ml-md-6">
-            <li class="nav-item dropdown no-arrow">
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
-                    <i class="fas fa-user-circle fa-fw"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a>
-                </div>
-            </li>
-        </ul>
-
-    </nav>
-
-    <div id="wrapper">
-
-        <!-- Sidebar -->
-        <ul class="sidebar navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="{% url "index" %}">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>概览</span>
-                </a>
-            </li>
-
-        </ul>
-
-        <div id="content-wrapper">
-
-            <div class="container-fluid">
-
-
-                {% block content %}
-                <!-- content-->
-
-                {% endblock %}
-
-            </div>
-            <!-- /.container-fluid -->
-
-            <!-- Sticky Footer -->
-            <footer class="sticky-footer">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright © jiaminqiang 2018</span>
-                    </div>
-                </div>
-            </footer>
-
+<div class="am-modal am-modal-alert" tabindex="-1" id="my-alert">
+    <div class="am-modal-dialog">
+        <div class="am-modal-hd">HAT</div>
+        <div class="am-modal-bd" id="my-alert_print">
+            Sorry，服务器可能开小差啦, 请重试!
         </div>
-        <!-- /.content-wrapper -->
-
-    </div>
-    <!-- /#wrapper -->
-
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">退出</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">选择 "退出" 如果你确认退出.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
-                    <a class="btn btn-primary" href=#>退出</a>
-                </div>
-            </div>
+        <div class="am-modal-footer">
+            <span class="am-modal-btn">确定</span>
         </div>
     </div>
+</div>
+<div class="am-cf admin-main">
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="/static/vendor/jquery/jquery.min.js"></script>
-    <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <div class="nav-navicon admin-main admin-sidebar">
 
-    <!-- Core plugin JavaScript-->
-    <script src="/static/vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <!-- Page level plugin JavaScript-->
+        <div class="sideMenu am-icon-dashboard" style="color:#aeb2b7; margin: 10px 0 0 0;"> 欢迎您：xxx &nbsp;&nbsp;<a
+                href='#'>注 销</a></div>
+        <div class="sideMenu">
+            <h3 class="am-icon-folder"><em></em> <a href="#">项目管理</a></h3>
+            <ul>
+                <li><a href="#">项 目 列 表</a></li>
+                <li><a href="#">新 增 项 目</a></li>
+            </ul>
+            <h3 class="am-icon-th-list"><em></em> <a href="#"> 模块管理</a></h3>
+            <ul>
+                <li><a href="#">模 块 列 表</a></li>
+                <li><a href="#">新 增 模 块</a></li>
+            </ul>
+            <h3 class="am-icon-bug"><em></em> <a href="#">用例管理</a></h3>
+            <ul>
+                <li><a href="#">新 增 用 例</a></li>
+                <li><a href="#">用 例 列 表</a></li>
+            </ul>
 
-    <!-- Custom scripts for all pages-->
-    <script src="/static/js/sb-admin.min.js"></script>
-    <script src="/static/js/multiselect.min.js"></script>
+            <h3 class="am-icon-tags"><em></em> <a href="#">配置管理</a></h3>
+            <ul>
+                <li><a href="#">新 增 配 置</a></li>
+                <li><a href="#">配 置 列 表</a></li>
+            </ul>
 
- 
+            <h3 class="am-icon-soundcloud"><em></em> <a href="#">测试计划</a></h3>
+            <ul>
+                <li><a href="#">测 试 套 件</a></li>
+                <li><a href="#">定 时 任 务</a></li>
+            </ul>
+
+
+            <h3 class="am-icon-jsfiddle"><em></em> <a href="#">报告管理</a></h3>
+            <ul>
+                <li><a href="#">查看报告</a></li>
+            </ul>
+            <h3 class="am-icon-gears"><em></em> <a href="#">系统设置</a></h3>
+            <ul>
+                <li><a href="#">运 行 环 境</a></li>
+            </ul>
+        </div>
+        <!-- sideMenu End -->
+    </div>
+
+    <div class="daohang">
+        <ul>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location={% url 'index' %}">返回首页
+                    <a href="{% url 'index' %}" class="am-close am-close-spin">~</a></button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location='#'">项目列表<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="#'">模块列表<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="#">用例列表<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location=#">新增配置<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location=#">新增用例<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location=#">新增Suite<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
+                        onclick="location=#">新增任务<a
+                        href="#" class="am-close am-close-spin">~</a>
+                </button>
+            </li>
+
+        </ul>
+    </div>
+
+    {% block content %}
+
+    {% endblock %}
+    <script type="text/javascript">
+        jQuery(".sideMenu").slide({
+            titCell: "h3", //鼠标触发对象
+            targetCell: "ul", //与titCell一一对应，第n个titCell控制第n个targetCell的显示隐藏
+            effect: "slideDown", //targetCell下拉效果
+            delayTime: 300, //效果时间
+            triggerTime: 150, //鼠标延迟触发时间（默认150）
+            defaultPlay: true,//默认是否执行效果（默认true）
+            returnDefault: false //鼠标从.sideMen移走后返回默认状态（默认false）
+        });
+    </script>
+</div>
 
 </body>
-
 </html>
 ```
 
-该模版使用（并包含）JavaScript 和  Bootstrap  （css框架）来改进HTML页面的布局和显示，使用Bootstrap框架是创建一个可以在不同浏览器大小上很好地扩展的有吸引力的页面的快速方法，它还允许我们处理页面呈现而无需进入任何细节-我们只想关注服务器端代码.
+### 创建index.html模板
 
+···
+{% extends "base.html" %}
+{% block title %}首页{% endblock %}
+{% load staticfiles %}
+{% block content %}
+    <div class="admin">
+    <h1> dashboard </h1>
 
-**index模版**
-新建HTML文件 locallibrary/catalog/templates/index.html 写入下面代码。第一行我们扩展了我们的基本模版, 使用 content替换默认块。
-```
-{% extends "base.html" %} {% block content %}
-<ol class="breadcrumb">
-    <li class="breadcrumb-item">
-        <a href="#">概览</a>
-    </li>
-</ol>
-<div class="row">
-    <div class="col-xl-3 col-sm-6 mb-3">
-      <div class="card text-white bg-primary o-hidden h-100">
-        <div class="card-body">
-          <div class="card-body-icon">
-            <i class="fas fa-fw fa-comments"></i>
-          </div>
-          <div class="mr-5">图书种类: {{ num_books }}</div>
-        </div>
-      </div>
     </div>
-    <div class="col-xl-3 col-sm-6 mb-3">
-      <div class="card text-white bg-warning o-hidden h-100">
-        <div class="card-body">
-          <div class="card-body-icon">
-            <i class="fas fa-fw fa-list"></i>
-          </div>
-          <div class="mr-5">图书数量: {{ num_instances }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-sm-6 mb-3">
-      <div class="card text-white bg-success o-hidden h-100">
-        <div class="card-body">
-          <div class="card-body-icon">
-            <i class="fas fa-fw fa-shopping-cart"></i>
-          </div>
-          <div class="mr-5">可接数量：{{ num_instances_available }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-sm-6 mb-3">
-      <div class="card text-white bg-danger o-hidden h-100">
-        <div class="card-body">
-          <div class="card-body-icon">
-            <i class="fas fa-fw fa-life-ring"></i>
-          </div>
-          <div class="mr-5">作者数量: {{ num_authors }}</div>
-        </div>
-     
-      </div>
-    </div>
-  </div>
 {% endblock %}
+···
+
+更新index视图
+```
+from django.shortcuts import render
+from django.shortcuts import HttpResponse
+
+# Create your views here.
+def index(request):
+    return render(request, 'index.html')
+
 ```
 
-在动态内容部分，我们已经为视图中包含的信息声明了占位符（模板变量）。变量使用“{{ }}”语法标记
-注意区别模板变量和模板标签
+打开http://127.0.0.1:8000/ 如下：
+![img](./Chapter-09-code/pics/index.jpg)
 
-这里需要注意的重要一点是，这些变量是用我们在视图的render()函数中传递给context的字典的key命名的渲染模板时，这些将被其关联值替换
+
+### 创建项目相关的modle
 ```
-return render(
-    request,
-    'index.html',
-     context={'num_books':num_books,'num_instances':num_instances,'num_instances_available':num_instances_available,'num_authors':num_authors},
-)
+from django.db import models
+
+# Create your models here.
+
+class BaseTable(models.Model):
+    create_time = models.DateTimeField('创建时间', auto_now_add=True)
+    update_time = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        abstract = True
+        verbose_name = "公共字段表"
+        db_table = 'BaseTable'
+
+class Project(BaseTable):
+    class Meta:
+        verbose_name = '项目信息'
+        db_table = 'ProjectInfo'
+
+    project_name = models.CharField('项目名称', max_length=50, unique=True, null=False)
+    responsible_name = models.CharField('负责人', max_length=20, null=False)
+    test_user = models.CharField('测试人员', max_length=100, null=False)
+    dev_user = models.CharField('开发人员', max_length=100, null=False)
+    publish_app = models.CharField('发布应用', max_length=100, null=False)
+    simple_desc = models.CharField('简要描述', max_length=100, null=True)
+    other_desc = models.CharField('其他信息', max_length=100, null=True)
+
 ```
-**在模版中引用静态文件**
-
-你的项目可能会使用静态资源，包括javascript，css 和图像。由于这些文件的位置可能不知道（或者可能会发生变化），则Django允许你指定你的模版相对于这些文件的url, STATIC_URL （默认基本网站设置的值为“／static／”）。
-
-
-
-在settings.py中添加以下代码，
+BaseTable 类里面有两个字段create_time、update_time，这两个字段在其他多个类里也要用到，其它需要这两个字段的类继续BaseTable即可；
+### 定义视图
+先定义空视图
 ```
-STATIC_ROOT = BASE_DIR + '/catalog/static/'
-```
-STATIC_ROOT 全局指定静态文件位置
+def project_add(request):
+    pass
 
-## 通用列表和详细视图
+def project_list(request):
+    pass
 
-### 书本清单页面
-书本清单页面，将显示页面中所有可用图书记录的列表，使用url: catalog/books/进行访问。该页面将显示每条记录的标题和作者，标题是指向相关图书详细信息页面的超链接。
+def project_edit(request):
+    pass
 
-**URL映射**
-
-打开/catalog/urls.py ，添加下面内容，这个path()函数，定义了一个与 URL 匹配的模式（'books/'），如果URL匹配，将调用视图函数（views.BookListView.as_view()）和一个对应这个特定映射的名称。
+def project_delete(request):
+    pass
 
 ```
+
+### 定义url
+
+```
+
+from django.urls import path
+from httpapitest import views
+
 urlpatterns = [
     path('', views.index, name='index'),
-    path('books/', views.BookListView.as_view(), name='books'),
+    path('project/list', views.project_list, name='project_list'),
+    path('project/add', views.project_add, name='project_add'),
+    path('project/edit', views.project_edit, name='projecta_edit'),
+    path('project/delete', views.project_delete, name='project_delete'),
 ]
 ```
 
-**View（基于类）**
+### 修改project_add视图
+```
+@csrf_exempt
+def project_add(request):
+    if request.is_ajax():
+        project = json.loads(request.body.decode('utf-8'))
+        if project.get('project_name') == '':
+            msg = '项目名称不能为空'
+            return HttpResponse(msg)
+        if project.get('responsible_name') == '':
+            msg = '负责人不能为空'
+            return HttpResponse(msg)
+        if project.get('test_user') == '':
+            msg = '测试人员不能为空'
+            return HttpResponse(msg)
+        if project.get('dev_user') == '':
+            msg = '开发人员不能为空'
+            return HttpResponse(msg)
+        if project.get('publish_app') == '':
+            msg = '发布应用不能为空'
+            return HttpResponse(msg)
+        if Project.objects.filter(project_name=project.get('project_name')):
+            msg = "项目已经存在"
+            return HttpResponse(msg)
+        else:
+            p = Project()
+            p.project_name = project.get('project_name')
+            p.responsible_name = project.get('responsible_name')
+            p.test_user = project.get('test_user')
+            p.dev_user = project.get('dev_user')
+            p.publish_app = project.get('publish_app')
+            p.simple_desc = project.get('simple_desc')
+            p.other_desc = project.get('other_desc')
+            p.save()
+            msg = 'ok'
+        if msg == 'ok':
+            return HttpResponse(reverse('project_list'))
+        else:
+            return HttpResponse(msg)
 
-我们可以很容易地，将书本列表视图编写为常规函数（就像我们之前的索引视图一样），它将查询数据库中的所有书本，然后调用render()，将列表传递给指定的模板。然而，我们用另一种方法取代，我们将使用基于类的通用列表视图（ListView） - 一个继承自现有视图的类。因为通用视图，已经实现了我们需要的大部分功能，并且遵循 Django 最佳实践，我们将能够创建更强大的列表视图，代码更少，重复次数更少
+    if request.method == 'GET':
+        return render(request, 'project_add.html')
+```
 
-打开 catalog/views.py，并将以下代码复制到文件的底部：
+### 新建project_add.html 模板
 
 ```
-from django.views import generic
-
-class BookListView(generic.ListView):
-    model = Book
-```
-
-通用视图将查询数据库，以获取指定模型（Book）的所有记录，然后呈现位于locallibrary/catalog/templates/catalog/book_list.html 的模板（我们将在下面创建）。在模板中，您可以使用名为object_list 或 book_list的模板变量（即通常为“the_model_name_list”），以访问书本列表
-
-可以添加属性，以更改上面的默认行为。例如，如果需要使用同一模型的多个视图，则可以指定另一个模板文件，或者如果book_list对于特定模板用例不直观，则可能需要使用不同的模板变量名称。可能最有用的变更，是更改/过滤返回的结果子集 - 因此，您可能会列出其他用户阅读的前5本书，而不是列出所有书本。
-
-```
-from django.views import generic
-
-class BookListView(generic.ListView):
-    model = Book
-    context_object_name = 'book_list'   # book list 变量的名称
-    queryset = Book.objects.all()
-    #queryset = Book.objects.filter(title__icontains='python')[:5] # 书名包含python的5本书 
-    template_name = 'book_list.html'  # 指定template名称
-```
-context_object_name 更改模板中引用对象的名称
-queryset 更改默认的查询结果默认返回改modle的所有记录
-template_name 更改默认的模板名称
-
-**创建列表视图模板**
-
-创建 HTML 文件 /locallibrary/catalog/templates/catalog/book_list.html，并复制到下面的文本中。如上所述，这是基于类的通用列表视图，所期望的默认模板文件（对于名为catalog的应用程序中，名为Book的模型）。
-
-通用视图的模板就像任何其他模板一样（当然，传递给模板的上下文/信息可能不同）。与我们的index模板一样，我们在第一行扩展基本模板，然后替换名为content的区块。
-
- ```
 {% extends "base.html" %}
-
+{% block title %}新增项目{% endblock %}
+{% load staticfiles %}
 {% block content %}
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="#">图书列表</a>
-        </li>
-    </ol>
 
-    <div class="card mb-3">
-        <div class="card-header">
-          <i class="fas fa-table"></i>
-          图书列表
-          </div>
-        <div class="card-body">
-            {% if book_list %}
-            <div class="table">
-                    <table class="table  table-sm   table-hover" id="dataTables-example">
-                        <thead>
-                            <tr>
-                                <th>书名</th>
-                                <th>作者</th>
-                                <th>ISBN</th>
-                                <th>列别</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for book in book_list %}
-                            <tr>
-                                <td>{{book.title}}</td>
-                                <td>{{book.author}}</td>
-                                <td>{{book.isbn}}</td>
-                                <td>{{book.genre }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p>There are no books in the library.</p>
-                  {% endif %}
+    <div class=" admin-content">
+
+        <div class="admin-biaogelist">
+            <div class="listbiaoti am-cf">
+                <ul class="am-icon-flag on"> 新增项目</ul>
+                <dl class="am-icon-home" style="float: right;"> 当前位置： 项目管理 > <a href="#">新增项目</a></dl>
+            </div>
+            <div class="fbneirong">
+                <form class="form-horizontal" id="project_add">
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="project_name">项目名称：</label>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" id="project_name"
+                                   aria-describedby="inputSuccess3Status" name="project_name" placeholder="请输入项目名称"
+                                   value="">
+                            <span class="glyphicon glyphicon-th-large form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="responsible_name">负责人：</label>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" id="responsible_name" name="responsible_name"
+                                   aria-describedby="inputSuccess3Status" placeholder="请指定项目负责人" value="">
+                            <span class="glyphicon glyphicon-user form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="test_user">测试人员：</label>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" id="test_user" name="test_user"
+                                   aria-describedby="inputSuccess3Status" placeholder="请输入参与的测试人员" value="">
+                            <span class="glyphicon glyphicon-user form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="dev_user">开发人员：</label>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" id="dev_user" name="dev_user"
+                                   aria-describedby="inputSuccess3Status" placeholder="请输入项目参与的研发人员" value="">
+                            <span class="glyphicon glyphicon-user form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="publish_app">发布应用：</label>
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" id="publish_app" name="publish_app"
+                                   aria-describedby="inputSuccess3Status" placeholder="请输入发布的应用" value="">
+                            <span class="glyphicon glyphicon-upload form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="simple_desc">简要描述：</label>
+                        <div class="col-md-5">
+                            <textarea type="text" rows="3" class="form-control" id="simple_desc" name="simple_desc"
+                                      aria-describedby="inputSuccess3Status" placeholder="项目简单概述"></textarea>
+                            <span class="glyphicon glyphicon-paperclip form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group  has-feedback">
+                        <label class="control-label col-md-2 text-primary" for="other_desc">其他信息：</label>
+                        <div class="col-md-5">
+                            <textarea type="text" rows="3" class="form-control" id="other_desc" name="other_desc"
+                                      aria-describedby="inputSuccess3Status" placeholder="项目其他相关信息描述"></textarea>
+                            <span class="glyphicon glyphicon-paperclip form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="am-form-group am-cf">
+                        <div class="you" style="margin-left: 8%;">
+                            <button type="button" class="am-btn am-btn-success am-radius" id="send"
+                                    onclick="info_ajax('#project_add', '{% url 'project_add' %}')">点 击 提 交
+                            </button>&nbsp;
+                            &raquo; &nbsp;
+                            <a type="submit" href="#" class="am-btn am-btn-secondary am-radius">新 增 模
+                                块</a>
+
+                        </div>
+                    </div>
+                </form>
+
+
             </div>
         </div>
-       
-      </div>
-           
+    </div>
 {% endblock %}
- ```
-
- 条件执行
- 我们使用 if, else 和 endif模板标签，来检查 book_list是否已定义且不为空。如果 book_list为空，则 else子句显示文本，说明没有要列出的书本。如果 book_list不为空，那么我们遍历书本列表
-
- ```
-{% if book_list %}
-  <!-- code here to list the books -->
-{% else %}
-  <p>There are no books in the library.</p>
-{% endif %}
- ```
-
- For 循环
-
- 模板使用for 和 endfor模板标签，以循环遍历书本列表，如下所示。每次迭代都会使用当前列表项的信息，填充书本模板变量book
-
-```
-{% for book in book_list %}
-  <li> <!-- code here get information from each book item --> </li>
-{% endfor %}
 ```
 
-访问变量
+### 新建commons.js文件
+```
+/*表单信息异步传输*/
+function info_ajax(id, url) {
+    var data = $(id).serializeJSON();
+    if (id === '#add_task') {
+        var include = [];
+        var i = 0;
+        $("ul#pre_case li a").each(function () {
+            include[i++] = [$(this).attr('id'), $(this).text()];
+        });
+        data['module'] = include;
+    }
 
-循环内的代码，为每本书创建一个列表项
+    $.ajax({
+        type: 'post',
+        url: url,
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        success: function (data) {
+            if (data !== 'ok') {
+                if (data.indexOf('/httpapitest/') !== -1) {
+                    window.location.href = data;
+                } else {
+                    myAlert(data);
+                }
+            }
+            else {
+                window.location.reload();
+            }
+        }
+        ,
+        error: function () {
+            myAlert('Sorry，服务器可能开小差啦, 请重试!');
+        }
+    });
+
+}
+
+
+/*提示 弹出*/
+function myAlert(data) {
+    $('#my-alert_print').text(data);
+    $('#my-alert').modal({
+        relatedTarget: this
+    });
+}
 
 ```
-<td>{{book.title}}</td>
-```
+使用浏览器打开http://127.0.0.1:8000/httpapitest/project/add 测试添加项目功能
 
-我们使用“点符号”（例如 book.title 和 book.author）访问相关书本记录的字段，其中书本项目book后面的文本是字段名称（如同在模型中定义的）。
 
-我们还可以在模板中，调用模型中的函数 - 在这里，我们调用Book.get_absolute_url()，来获取可用于显示关联详细记录的URL。这项工作提供的函数没有任何参数（没有办法传递参数！）
 
-更新基本模板
-打开基本模板（/locallibrary/catalog/templates/base.html）并将 {% url 'books' %} 插入所有书本 All books 的 URL 链接，如下所示。这将启用所有页面中的链接（由于我们已经创建了 “books” 的 url 映射器，我们可以成功地将其设置到位）
-
+### 修改project_list视图
 
 ```
-<li><a href="{% url 'books' %}">图书</a></li>
+def project_list(request):
+   rs = Project.objects.all().order_by("-update_time")
+   paginator = Paginator(rs,5)
+   page = request.GET.get('page')
+   objects = paginator.get_page(page)
+   context_dict = {'project': objects}
+   return render(request,"project_list.html",context_dict)
 ```
 
-### 书本详细信息页面
-
-书本详细信息页面，将显示有关特定书本的信息，使用 URL catalog/book/<id>（其中 <id> 是Book的主键）进行访问。除了Book模型中的字段（作者，摘要，ISBN，语言和种类）之外，我们还将列出可用副本（BookInstances）的详细信息，包括状态，预期返回日期，印记和 id。这将使我们的读者，不仅可以了解该书，还可以确认是否/何时可用
-
-**URL 映射**
-
-打开 /catalog/urls.py ，并添加下面粗体显示的 “book-detail” URL 映射器。这个 path() 函数定义了一个模式，关联到基于通用类的详细信息视图和名称。
-
-```
-urlpatterns = [
-    path('', views.index, name='index'),
-    path('books/', views.BookListView.as_view(), name='books'),
-    path('book/<int:pk>', views.BookDetailView.as_view(), name='book-detail'),
-]
-```
-对于书本详细信息路径，URL 模式使用特殊语法，来捕获我们想要查看的书本的特定 id。语法非常简单：尖括号定义要捕获的URL部分，包含视图可用于访问捕获数据的变量的名称。例如，<something> 将捕获标记的模式，并将值作为变量 “something” ，传递给视图。你可以选择在变量名称前，加上一个定义数据类型的转换器规范（int，str，slug，uuid，path）。
-
-在这里，我们使用 '<int:pk>' 来捕获 book id，它必须是一个整数，并将其作为名为 pk 的参数（主键的缩写）传递给视图。
-
-基于类的通用详细信息视图，需要传递一个名为 pk 的参数。如果您正在编写自己的函数视图，则可以使用您喜欢的任何参数名称，或者，确实也可以，在未命名的参数中传递信息
-
-**View (基于类)**
-打开 catalog/views.py，并将以下代码复制到文件的底部
- 
-```
-class BookDetailView(generic.DetailView):
-    model = Book
-```
-
-**创建详细信息视图模板**
-
-创建 HTML 文件 /locallibrary/catalog/templates/catalog/book_detail.html
-
+### 添加project_list.html 模板
 ```
 {% extends "base.html" %}
-
+{% block title %}项目信息{% endblock %}
+{% load staticfiles %}
 {% block content %}
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="#">图书详情</a>
-        </li>
-    </ol>
-
-    <div class="card mb-3">
-        <div class="card-header">
-          <i class="fas fa-table"></i>
-          图书详情
+    <div class="admin-biaogelist">
+        <div class="listbiaoti am-cf">
+            <ul class="am-icon-flag on"> 项目列表</ul>
+            <dl class="am-icon-home" style="float: right;"> 当前位置： 项目管理 > 项目列表</a></dl>
+            <dl>
+                <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-plus"
+                        onclick="location='{% url 'project_add' %}'">新增项目
+                </button>
+                <button type="button" class="am-btn am-btn-primary am-round am-btn-xs am-icon-plus">批量导入
+                </button>
+                <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-bug">批量运行
+                </button>
+            </dl>
         </div>
-        <div class="card-body">
 
-                <h1>书名: {{ book.title }}</h1>
+        <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
+            <form id="pro_filter" method="post" action="{% url 'project_list' %}">
+                <ul>
+                    <li style="padding-top: 5px">
+                        <select name="project" class="am-input-zm am-input-xm">
+                                <option value="All">All</option>
+                        </select>
+                    </li>
+                    <li style="padding-top: 5px"><input  type="text" name="user"
+                                                        class="am-input-sm am-input-xm"
+                                                        placeholder="负责人"/></li>
 
-                <p><strong>作者:</strong> <a href="">{{ book.author }}</a></p> <!-- author detail link not yet defined -->
-                <p><strong>摘要:</strong> {{ book.summary }}</p>
-                <p><strong>ISBN:</strong> {{ book.isbn }}</p> 
-                <p><strong>语言:</strong> {{ book.language }}</p>  
-                <p><strong>类别:</strong> {% for genre in book.genre.all %} {{ genre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>  
-              
-                <div style="margin-left:20px;margin-top:20px">
-                  <h4>副本</h4>
-              
-                  {% for copy in book.bookinstance_set.all %}
-                  <hr>
-                  <p class="{% if copy.status == 'a' %}text-success{% elif copy.status == 'm' %}text-danger{% else %}text-warning{% endif %}">{{ copy.get_status_display }}</p>
-                  {% if copy.status != 'a' %}<p><strong>预计可借日期:</strong> {{copy.due_back}}</p>{% endif %}
-                  <p><strong>版次:</strong> {{copy.imprint}}</p>
-                  <p class="text-muted"><strong>Id:</strong> {{copy.id}}</p>
-                  {% endfor %}
-                </div>
+                    <li>
+                        <button style="padding-top: 5px; margin-top: 9px"
+                                class="am-btn am-radius am-btn-xs am-btn-success">搜索
+                        </button>
+                    </li>
+                </ul>
+            </form>
         </div>
-       
-      </div>
-           
+        <form class="am-form am-g">
+            <table width="100%" class="am-table am-table-bordered am-table-radius am-table-striped">
+                <thead>
+                <tr class="am-success">
+                    <th class="table-check"><input type="checkbox" id="select_all"/></th>
+                    <th class="table-title">序号</th>
+                    <th class="table-type">项目名称</th>
+                    <th class="table-type">负责人</th>
+                    <th class="table-title">发布应用</th>
+                    <th class="table-title">测试人员</th>
+                    <th class="table-title">模块/Suite/用例/配置</th>
+                    <th class="table-date am-hide-sm-only">创建时间</th>
+                    <th width="163px" class="table-set">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for foo in project %}
+                    <tr>
+                        <td><input type="checkbox" name="project_{{ foo.id }}" value="{{ foo.id }}"/></td>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="#"
+                               onclick="edit('{{ foo.id }}','{{ foo.project_name }}', '{{ foo.responsible_name }}'
+                                       , '{{ foo.test_user }}','{{ foo.dev_user }}', '{{ foo.publish_app }}'
+                                       , '{{ foo.simple_desc }}', '{{ foo.other_desc }}')">{{ foo.project_name }}</a>
+                        </td>
+                        <td>{{ foo.responsible_name }}</td>
+                        <td>{{ foo.publish_app }}</td>
+                        <td>{{ foo.test_user }}</td>
+
+                        
+                        <td>0/0/0/0</td>
+                           
+
+                        <td class="am-hide-sm-only">{{ foo.create_time }}</td>
+                        <td>
+                            <div class="am-btn-toolbar">
+                                <div class="am-btn-group am-btn-group-xs">
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
+                                            data-am-popover="{content: '运行', trigger: 'hover focus'}"
+                                            >
+                                        <span class="am-icon-bug"></span></button>
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
+                                            data-am-popover="{content: '编辑', trigger: 'hover focus'}"
+                                            > <span
+                                            class="am-icon-pencil-square-o"></span></button>
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-danger am-round"
+                                            data-am-popover="{content: '删除', trigger: 'hover focus'}"
+                                           ><span
+                                            class="am-icon-trash-o"></span></button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+
+                </tbody>
+            </table>
+
+            <div class="am-btn-group am-btn-group-xs">
+                <button type="button" class="am-btn am-btn-default" onclick="location='{% url 'project_add'%}'"><span
+                        class="am-icon-plus"></span> 新增
+                </button>
+            </div>
+
+            <ul class="am-pagination am-fr">
+                 <span class="step-links">
+                                {% if project.has_previous %}
+                                   
+                                    <a href="?page={{ project.previous_page_number }}">上一页</a>
+                                {% endif %}
+                        
+                                <span class="current">
+                                     {{ project.number }}/{{ project.paginator.num_pages }} 页.
+                                </span>
+                        
+                                {% if project.has_next %}
+                                    <a href="?page={{ project.next_page_number }}">下一页</a>
+                                    
+                                {% endif %}
+                            </span>
+            </ul>
+            <hr/>
+        </form>
+    </div>
+    <script type="text/javascript">
+    </script>
+
 {% endblock %}
 ```
-此模板中的几乎所有内容，都已在前面描述过
-+ 我们扩展基本模板，并覆盖 “内容”区块 content。
-+ 我们使用条件处理(if else endif)，来确定是否显示特定内容。
-+ 我们使用 for 循环遍历对象列表
-+ 我们使用 "点表示法" 访问context字段（因为我们使用了详细的通用视图，context被命名为book） 
 
-函数book.bookinstance_set.all()返回与特定 Book 相关联的 BookInstance记录集合。
+访问 http://127.0.0.1:8000/httpapitest/project/list
 
+### 修改base.html
+修改base.html 使菜单 项目列表，和添加项目可用
+
+
+
+###  project_list 模板添加编辑功能
+找到编辑button 添加以下代码
 ```
-{% for copy in book.bookinstance_set.all %}
-<!-- code to iterate across each copy/instance of a book -->
-{% endfor %}
-```
-
-需要此方法，是因为仅在关系的 “一” 侧声明 ForeignKey（一对多）字段。由于没有做任何事情，来声明其他（“多”）模型中的关系，因此它没有任何字段，来获取相关记录集。为了解决这个问题，Django构造了一个适当命名的 “反向查找” 函数，您可以使用它。函数的名称，是通过对声明 ForeignKey 的模型名称，转化为小写来构造的，然后是_set（即，在 Book 中创建的函数是 bookinstance_set())
-
-get_status_display函数 获取choices属性的值
-
-修改book_list.html
-```
-<td><a href="{{ book.get_absolute_url }}">{{ book.title }}</a></td>
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
+                                            data-am-popover="{content: '编辑', trigger: 'hover focus'}"
+                                            onclick="edit('{{ foo.id }}','{{ foo.project_name }}', '{{ foo.responsible_name }}'
+                                                    , '{{ foo.test_user }}','{{ foo.dev_user }}', '{{ foo.publish_app }}'
+                                                    , '{{ foo.simple_desc }}', '{{ foo.other_desc }}')"
+                                            > <span
+                                            class="am-icon-pencil-square-o"></span></button>
 ```
 
-### 分页
-
-记录少的时候，我们的图书清单页面看起来会很好。但是，当进入数十或数百条记录的页面时，页面将逐渐花费更长时间加载（并且有太多内容无法合理浏览）。此问题的解决方案，是为列表视图添加分页，减少每页上显示的项目数。
-
-Django 在分页方面，拥有出色的内置支持。更好的是，它内置于基于类的通用列表视图中，因此您无需执行太多操作即可启用它！
-
-打开 catalog/views.py，修改为以下内容
-
+在javascript部分添加以下代码
 ```
-class BookListView(generic.ListView):
-    model = Book
-    paginate_by = 10
-```
-
-现在数据已经分页，我们需要添加对模板的支持，以滚动结果集合。因为我们可能希望在所有列表视图中，都执行此操作，所以我们将以可添加到基本模板的方式，执行此操作。
-
-打开 /locallibrary/catalog/templates/base.html，修改为以下内容。代码首先检查当前页面上，是否启用了分页。如果是，则它会根据需要，添加下一个和上一个链接（以及当前页码）。
-
-```
-{% block content %}{% endblock %}
-  
-{% block pagination %}
-  {% if is_paginated %}
-      <div class="pagination">
-          <span class="page-links">
-              {% if page_obj.has_previous %}
-                  <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">previous</a>
-              {% endif %}
-              <span class="page-current">
-                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-              </span>
-              {% if page_obj.has_next %}
-                  <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">next</a>
-              {% endif %}
-          </span>
-      </div>
-  {% endif %}
-{% endblock %} 
+function edit(id, pro_name, responsible_name, test_user, dev_user, publish_app, simple_desc, other_desc) {
+            $('#index').val(id);
+            $('#project_name').val(pro_name);
+            $('#responsible_name').val(responsible_name);
+            $('#test_user').val(test_user);
+            $('#dev_user').val(dev_user);
+            $('#publish_app').val(publish_app);
+            $('#simple_desc').val(simple_desc);
+            $('#other_desc').val(other_desc);
+            $('#my-edit').modal({
+                relatedTarget: this,
+                onConfirm: function () {
+                    update_data_ajax('#edit_form', '{% url 'project_edit' %}')
+                },
+                onCancel: function () {
+                }
+            });
+        }
 ```
 
-page_obj 是一个 Paginator 对象，如果在当前页面上使用分页，它将存在。 它允许您获取有关当前页面，之前页面，有多少页面等的所有信息。
+在`{% block content %}`下面添加以下代码
+```
+<div class="am-modal am-modal-prompt" tabindex="-1" id="my-edit">
+        <div class="am-modal-dialog">
+            <div style="font-size: medium;" class="am-modal-hd">HAT</div>
+            <div class="am-modal-bd">
+                <form class="form-horizontal" id="edit_form">
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="index"
+                               style="font-weight: inherit; font-size: small " hidden>索引值：</label>
+                        <div class="col-sm-9">
+                            <input name="index" type="text" class="form-control" id="index"
+                                   placeholder="索引值" value="" hidden>
+                        </div>
+                    </div>
 
-练习：
-1. 实现Authour列表视图
-2. 实现Authour详细视图
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="project_name"
+                               style="font-weight: inherit; font-size: small ">项目名称：</label>
+                        <div class="col-sm-9">
+                            <input name="project_name" type="text" class="form-control" id="project_name"
+                                   placeholder="项目名称" value="" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="responsible_name"
+                               style="font-weight: inherit; font-size: small ">负责人：</label>
+                        <div class="col-sm-9">
+                            <input name="responsible_name" type="text" id="responsible_name" class="form-control"
+                                   placeholder="负责人" value="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="test_user"
+                               style="font-weight: inherit; font-size: small ">测试人员：</label>
+                        <div class="col-sm-9">
+                            <input name="test_user" type="text" id="test_user" class="form-control"
+                                   placeholder="测试人员" value="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="dev_user"
+                               style="font-weight: inherit; font-size: small ">开发人员：</label>
+                        <div class="col-sm-9">
+                            <input name="dev_user" type="text" id="dev_user" class="form-control"
+                                   placeholder="开发人员" value="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="publish_app"
+                               style="font-weight: inherit; font-size: small ">发布应用：</label>
+                        <div class="col-sm-9">
+                            <input name="publish_app" type="text" id="publish_app" class="form-control"
+                                   placeholder="发布应用" value="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="simple_desc"
+                               style="font-weight: inherit; font-size: small ">简要描述：</label>
+                        <div class="col-sm-9">
+                            <input name="simple_desc" type="text" id="simple_desc" class="form-control"
+                                   placeholder="简要描述" value="">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="other_desc"
+                               style="font-weight: inherit; font-size: small ">其他信息：</label>
+                        <div class="col-sm-9">
+                            <input name="other_desc" type="text" id="other_desc" class="form-control"
+                                   placeholder="其他信息" value="">
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+```
+需改commons.js添加以下代码
+
+```
+function update_data_ajax(id, url) {
+    var data = $(id).serializeJSON();
+    $.ajax({
+        type: 'post',
+        url: url,
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        success: function (data) {
+            if (data !== 'ok') {
+                if (data.indexOf('/httpapitest/') !== -1) {
+                    window.location.href = data;
+                } else {
+                    myAlert(data);
+                }
+            }
+            else {
+                window.location.reload();
+            }
+        }
+        ,
+        error: function () {
+            myAlert('Sorry，服务器可能开小差啦, 请重试!');
+        }
+    });
+}
+```
+
+### 修改project_edit视图
+
+```
+@csrf_exempt
+def project_edit(request):
+    if request.is_ajax():
+        project = json.loads(request.body.decode('utf-8'))
+        if project.get('project_name') == '':
+            msg = '项目名称不能为空'
+            return HttpResponse(msg)
+        if project.get('responsible_name') == '':
+            msg = '负责人不能为空'
+            return HttpResponse(msg)
+        if project.get('test_user') == '':
+            msg = '测试人员不能为空'
+            return HttpResponse(msg)
+        if project.get('dev_user') == '':
+            msg = '开发人员不能为空'
+            return HttpResponse(msg)
+        if project.get('publish_app') == '':
+            msg = '发布应用不能为空'
+            return HttpResponse(msg)
+        else:
+            p = Project.objects.get(project_name=project.get('project_name'))
+            p.responsible_name = project.get('responsible_name')
+            p.test_user = project.get('test_user')
+            p.dev_user = project.get('dev_user')
+            p.publish_app = project.get('publish_app')
+            p.simple_desc = project.get('simple_desc')
+            p.other_desc = project.get('other_desc')
+            p.save()
+            msg = 'ok'
+        if msg == 'ok':
+            return HttpResponse(reverse('project_list'))
+        else:
+            return HttpResponse(msg)
+```
+
+点击编辑测试
+
+### 修改project_list 添加删除功能
+找到删除button 修改为
+
+```
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-danger am-round"
+                                            data-am-popover="{content: '删除', trigger: 'hover focus'}"
+                                            onclick="invalid('{{ foo.id }}')"
+                                           ><span
+                                            class="am-icon-trash-o"></span></button>
+```
+
+在javascript部分添加以下代码
+
+```
+        function invalid(id) {
+            $('#my-invalid').modal({
+                relatedTarget: this,
+                onConfirm: function () {
+                    del_data_ajax(id, '{% url 'project_edit' %}')
+                },
+                onCancel: function () {
+                }
+            });
+        }
+```
+
+在commons.js 添加以下代码
+```
+function del_data_ajax(id, url) {
+    var data = {
+        "id": id
+    };
+    $.ajax({
+        type: 'post',
+        url: url,
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        success: function (data) {
+            if (data !== 'ok') {
+                if (data.indexOf('/httpapitest/') !== -1) {
+                    window.location.href = data;
+                } else {
+                    myAlert(data);
+                }
+            }
+            else {
+                window.location.reload();
+            }
+        },
+        error: function () {
+            myAlert('Sorry，服务器可能开小差啦, 请重试!');
+        }
+    });
+}
+```
+
+修改project_delete视图
+```
+@csrf_exempt
+def project_delete(request):
+    if request.is_ajax():
+        data = json.loads(request.body.decode('utf-8'))
+        project_id = data.get('id')
+        project = Project.objects.get(id=project_id)
+        project.delete()
+        return HttpResponse(reverse('project_list'))
+```
+

@@ -1,0 +1,37 @@
+{% extends 'navigation/base.html' %}
+{% load staticfiles %}
+{% block body_block %}
+    <h1>django说...</h1>
+    <div>最受喜欢的分类</div>
+    <div>
+      {% if categories %}
+      <ul>
+        {% for category in categories %}
+          <li>
+          <a href="{% url 'show_category' category.slug %}">{{ category.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有分类.</strong>
+      {% endif %}
+    </div>
+    <div>访问最多的网页</div>
+    <div>
+      {% if pages %}
+      <ul>
+        {% for page in pages %}
+          <li>
+          <a href="{{ page.url}}">{{page.title}}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <strong>没有页面.</strong>
+      {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'about' %}">关于</a><br />
+      <img src="{% static "images/django.jpg" %}" alt="Picture of django" />
+    </div>
+{% endblock  %}

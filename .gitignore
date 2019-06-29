@@ -8,3 +8,4 @@ Chapter-*-code/vue-admin/node_modules
 .vscode/settings.json
 test.py
 python-dev.code-workspace
+./*/venv

@@ -48,7 +48,7 @@ def index(request):
 {% load staticfiles %}
 <html>
   <head>
-    <title>Rango</title>
+    <title>navigation</title>
   </head>
   <body>
     <h1>django说...</h1>
@@ -75,7 +75,7 @@ def index(request):
 这里，我们使用 Django 模板语言提供的 if 和 for 控制语句呈现数据。在页面的 <body> 元素中，我们判断 categories（包含分类列表的上下文变量）中有没有分类`{% if categories %}`。如果有分类，构建一个 HTML 无序列表` <ul>` 。 for 循环迭代分类列表` {% for category in categories %}`，在列表项目` <li> `标签中输出各分类的名称`{{ category.name }}`。
 如果没有分类，显示一个消息，指明没有分类。从上述代码片段可以看出， Django 模板语言中的命令放在 {% 和 %} 之间，而变量放在 {{ 和 }} 之间。
 
-现在访问 Rango 的主页应该会看到页面标题下方显示着分类列表
+现在访问 navigation 的主页应该会看到页面标题下方显示着分类列表
 
 ![img](./Chapter-08-code/pics/django6.jpg)
 
@@ -199,7 +199,7 @@ def show_category(request, category_name_slug):
         context_dict['category'] = None
         context_dict['pages'] = None
     # 渲染响应，返回给客户端
-    return render(request, 'rango/category.html', context_dict)
+    return render(request, 'navigation/category.html', context_dict)
 ```
 
 这个视图的基本步骤与 index() 视图一样。首先定义上下文字典，然后尝试从模型中提取数据，并把相关数据添加到上下文字典中。我们通过传给 show_category() 视图函数的category_name_slug 参数确认要查看的是哪个分类。如果通过别名找到了分类，获取与之关联的网页，并将其添加到上下文字典 context_dict 中。
@@ -483,10 +483,7 @@ def index(request):
 ```
 ##  模板进阶
 
-目前，我们为 navigation 应用的几个页面创建了 HTML 模板。你可能发现了，不同模板之间有很多
-HTML 代码是重复的，这违背了 DRY 原则。此外，你可能也注意到了，链接中使用的是硬编码
-的 URL 路径。这些问题会导致网站难以维护，倘若想改变网站的整体结构，或者调整 URL 路
-径，每个模板都要修改。
+目前，我们为 navigation 应用的几个页面创建了 HTML 模板。你可能发现了，不同模板之间有很多HTML 代码是重复的，这违背了 DRY 原则。此外，你可能也注意到了，链接中使用的是硬编码的 URL 路径。这些问题会导致网站难以维护，倘若想改变网站的整体结构，或者调整 URL 路径，每个模板都要修改。
 
 ### 相对url
 目前，模板中的链接地址使用的是硬编码的 URL，例如 <a href="/navigation/about/">关于</a>。这样做的缺点是一Ȁ修改了 urls.py 中的 URL 映射，就要更新对应的所有 URL 引用。正确的方法是使用模板标签 `{% url %}`查询 urls.py 文件中的 URL 模式，动态插入 URL 路径。
@@ -523,7 +520,7 @@ navigation 应用的 index.html 模板中有个带参数的 URL，即 /navigatio
 <html>
   <head lang="en">
     <meta charset="UTF-8" />
-    <title>Rango</title>
+    <title>Navigation</title>
   </head>
   <body>
     <!-- 各页面的具体内容 -->
@@ -543,7 +540,7 @@ block 标签。例如，可以像下面这样在 base.html 模板中添加 body_
 <html>
   <head lang="en">
     <meta charset="UTF-8" />
-    <title>Rango</title>
+    <title>Navigation</title>
   </head>
   <body>
     {% block body_block %}
@@ -655,8 +652,7 @@ Django 模板标签放在 {% 和 %} 之间。因此，区块以 {% block <NAME> 
 ```
 
 ## 用户身份验证
-接下来介绍 Django 提供的用户身份验证机制。我们将使用 django.contrib.auth 包中
-的 auth 应用。
+接下来介绍 Django 提供的用户身份验证机制。我们将使用 django.contrib.auth 包中的 auth 应用。
 
 这个应用提供了下述概念和功能：
 1. 用户和用户模型
