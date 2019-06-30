@@ -10,6 +10,7 @@
 + 报告管理
 + 定时任务
 + 性能测试
++ 环境管理
 
 ## 系统架构
 
@@ -85,7 +86,7 @@ DATABASES = {
 ```
 STATIC_URL = '/static/'
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = [STATIC_DIR, 
+STATICFILES_DIRS = [STATIC_DIR, ]
 ```
 在manage.py同级目录创建static目录
 
@@ -339,7 +340,7 @@ def index(request):
 
 ### 创建index.html模板
 
-···
+```
 {% extends "base.html" %}
 {% block title %}首页{% endblock %}
 {% load staticfiles %}
@@ -349,7 +350,7 @@ def index(request):
 
     </div>
 {% endblock %}
-···
+```
 
 更新index视图
 ```
