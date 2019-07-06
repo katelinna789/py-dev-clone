@@ -1127,3 +1127,21 @@ def visitor_cookie_handler(request, response):
 然后更新 index() 视图，调用 visitor_cookie_handler() 辅助函数。为此，要先提取得到
 response 对象。
 
+```
+def index(request):
+    # 查询数据库，获取目前存储的所有分类
+    # 按点赞次数倒序排列分类
+    # 获取前 5 个分类（如果分类数少于 5 个，那就获取全部）
+    # 把分类列表放入 context_dict 字典
+    # 稍后传给模板引擎
+    category_list = Category.objects.order_by('-likes')[:5]
+    context_dict = {'categories': category_list}
+    # 渲染响应，发给客户端
+    page_list = Page.objects.order_by('-views')[:5]
+    context_dict["pages"] = page_list
+    response = render(request, 'navigation/index.html', context_dict)
+    # 调用处理 cookie 的辅助函数
+    visitor_cookie_handler(request, response)
+    # 返回 response 对象，更新目标 cookie
+    return response
+```

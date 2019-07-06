@@ -473,7 +473,7 @@ def project_add(request):
     if request.method == 'GET':
         return render(request, 'project_add.html')
 ```
-
+导入from django.views.decorators.csrf import csrf_exempt
 ### 新建project_add.html 模板
 
 ```
@@ -638,6 +638,9 @@ def project_list(request):
    return render(request,"project_list.html",context_dict)
 ```
 
+`from django.core.paginator import Paginator`
+
+
 ### 添加project_list.html 模板
 ```
 {% extends "base.html" %}
@@ -781,7 +784,7 @@ def project_list(request):
 
 
 ###  project_list 模板添加编辑功能
-找到编辑button 添加以下代码
+找到编辑button 编辑以下代码
 ```
                                     <button type="button"
                                             class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
@@ -793,7 +796,7 @@ def project_list(request):
                                             class="am-icon-pencil-square-o"></span></button>
 ```
 
-在javascript部分添加以下代码
+在project_list.html的javascript部分添加以下代码
 ```
 function edit(id, pro_name, responsible_name, test_user, dev_user, publish_app, simple_desc, other_desc) {
             $('#index').val(id);
@@ -992,7 +995,7 @@ def project_edit(request):
             $('#my-invalid').modal({
                 relatedTarget: this,
                 onConfirm: function () {
-                    del_data_ajax(id, '{% url 'project_edit' %}')
+                    del_data_ajax(id, '{% url 'project_delete' %}')
                 },
                 onCancel: function () {
                 }
@@ -1029,6 +1032,22 @@ function del_data_ajax(id, url) {
     });
 }
 ```
+添加以下代码到 my-edit div 下面
+```
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="my-invalid">
+        <div class="am-modal-dialog">
+            <div class="am-modal-hd">HAT</div>
+            <div class="am-modal-bd">
+                亲，此操作会强制删除该项目下所有模块和用例，请谨慎操作！！！
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>确定</span>
+            </div>
+        </div>
+    </div>  
+```
+
 
 修改project_delete视图
 ```
@@ -1039,6 +1058,6 @@ def project_delete(request):
         project_id = data.get('id')
         project = Project.objects.get(id=project_id)
         project.delete()
-        return HttpResponse(reverse('project_list'))
+        return HttpResponse(reverse('project_delete'))
 ```
 
