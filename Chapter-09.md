@@ -425,7 +425,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('project/list', views.project_list, name='project_list'),
     path('project/add', views.project_add, name='project_add'),
-    path('project/edit', views.project_edit, name='projecta_edit'),
+    path('project/edit', views.project_edit, name='project_edit'),
     path('project/delete', views.project_delete, name='project_delete'),
 ]
 ```
@@ -630,14 +630,14 @@ function myAlert(data) {
 
 ```
 def project_list(request):
-   rs = Project.objects.all().order_by("-update_time")
-   paginator = Paginator(rs,5)
-   page = request.GET.get('page')
-   objects = paginator.get_page(page)
-   context_dict = {'project': objects}
-   return render(request,"project_list.html",context_dict)
+    rs = Project.objects.all().order_by("-update_time")
+    paginator = Paginator(rs,5)
+    page = request.GET.get('page')
+    objects = paginator.get_page(page)
+    context_dict = {'project': objects}
+    return render(request,"project_list.html",context_dict)
 ```
-
+导入Pagintor
 `from django.core.paginator import Paginator`
 
 
@@ -761,7 +761,7 @@ def project_list(request):
                                      {{ project.number }}/{{ project.paginator.num_pages }} 页.
                                 </span>
                         
-                                {% if project.has_next %}
+                                {% if module.has_next %}
                                     <a href="?page={{ project.next_page_number }}">下一页</a>
                                     
                                 {% endif %}
@@ -1058,6 +1058,6 @@ def project_delete(request):
         project_id = data.get('id')
         project = Project.objects.get(id=project_id)
         project.delete()
-        return HttpResponse(reverse('project_delete'))
+        return HttpResponse(reverse('project_list'))
 ```
 
