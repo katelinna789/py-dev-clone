@@ -1061,3 +1061,108 @@ def project_delete(request):
         return HttpResponse(reverse('project_list'))
 ```
 
+### 添加项目搜索功能
+
+添加搜索视图
+```
+def project_search(request):
+    pass
+```
+
+添加url
+```
+path('project/search', views.project_search, name='project_search'),
+```
+
+修改project_list视图中的搜索表单
+
+```
+<div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
+            <form id="pro_filter" method="post" action="{% url 'project_search' %}">
+                <ul>
+                    <li style="padding-top: 5px">
+                        <select name="project" class="am-input-zm am-input-xm">
+                                <option value="All">All</option>
+                                {% for foo in project %}
+                                <option value="{{ foo.project_name}}">{{ foo.project_name }}</option>
+                                {% endfor %}
+                        </select>
+                    </li>
+                    <li style="padding-top: 5px"><input  type="text" name="user"
+                                                        class="am-input-sm am-input-xm"
+                                                        placeholder="负责人"/></li>
+
+                    <li>
+                        <button style="padding-top: 5px; margin-top: 9px"
+                                class="am-btn am-radius am-btn-xs am-btn-success">搜索
+                        </button>
+                    </li>
+                </ul>
+            </form>
+        </div>
+```
+验证查看项目列表，搜索表单中的下拉选项
+
+### 添加搜索功能
+
+修改project_list 视图
+
+```
+@csrf_exempt
+def project_list(request):
+    if request.method == "GET":
+        projects = Project.objects.all().order_by("-update_time")
+        rs = Project.objects.all().order_by("-update_time")
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'project': objects,'all_projects': projects}
+        return render(request,"project_list.html",context_dict)
+
+    if request.method == 'POST':
+        projects = Project.objects.all().order_by("-update_time")
+        project_name = request.POST.get('project')
+        if project_name != "All":
+            rs = Project.objects.filter(project_name=project_name)
+        user = request.POST.get('user')
+        if user:
+            rs = Project.objects.filter(responsible_name=user)
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'project': objects, 'all_projects': projects}
+        return render(request,"project_list.html",context_dict)
+```
+
+
+
+修改project_list.html模板的pro_filter form
+```
+        <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
+            <form id="pro_filter" method="post" action="{% url 'project_list' %}">
+                <ul>
+                    <li style="padding-top: 5px">
+                        <select name="project" class="am-input-zm am-input-xm">
+                                <option value="All">All</option>
+                                {% for foo in all_projects %}
+                                <option value="{{ foo.project_name}}">{{ foo.project_name }}</option>
+                                {% endfor %}
+                        </select>
+                    </li>
+                    
+                    <li style="padding-top: 5px"><input  type="text" name="user"
+                                                        class="am-input-sm am-input-xm"
+                                                        placeholder="负责人"/></li>
+
+                    <li>
+                        <button style="padding-top: 5px; margin-top: 9px"
+                                class="am-btn am-radius am-btn-xs am-btn-success">搜索
+                        </button>
+                    </li>
+                </ul>
+            </form>
+        </div>
+```
+
+测试搜索功能
+
