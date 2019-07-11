@@ -9,3 +9,5 @@ Chapter-*-code/vue-admin/node_modules
 test.py
 python-dev.code-workspace
 ./*/venv
+*.log
+./test
