@@ -10,4 +10,4 @@ test.py
 python-dev.code-workspace
 ./*/venv
 *.log
-./test
+test
