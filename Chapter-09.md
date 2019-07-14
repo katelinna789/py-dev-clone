@@ -1111,26 +1111,30 @@ path('project/search', views.project_search, name='project_search'),
 @csrf_exempt
 def project_list(request):
     if request.method == "GET":
+        info = {'belong_project': "All"}
         projects = Project.objects.all().order_by("-update_time")
         rs = Project.objects.all().order_by("-update_time")
         paginator = Paginator(rs,5)
         page = request.GET.get('page')
         objects = paginator.get_page(page)
-        context_dict = {'project': objects,'all_projects': projects}
+        context_dict = {'project': objects,'all_projects': projects, 'info': info}
         return render(request,"project_list.html",context_dict)
-
     if request.method == 'POST':
         projects = Project.objects.all().order_by("-update_time")
         project_name = request.POST.get('project')
         user = request.POST.get('user')
+        info = {'belong_project': project_name, 'user':user}
+
         if project_name != "All":
             rs = Project.objects.filter(project_name=project_name)
         elif user:
             rs = Project.objects.filter(responsible_name=user)
+        else:
+            rs = projects
         paginator = Paginator(rs,5)
         page = request.GET.get('page')
         objects = paginator.get_page(page)
-        context_dict = {'project': objects, 'all_projects': projects}
+        context_dict = {'project': objects, 'all_projects': projects,'info': info}
         return render(request,"project_list.html",context_dict)
 ```
 
@@ -1143,14 +1147,22 @@ def project_list(request):
                 <ul>
                     <li style="padding-top: 5px">
                         <select name="project" class="am-input-zm am-input-xm">
+                            <option value="{{ info.belong_project }}"
+                                    selected>{{ info.belong_project }}</option>
+
+                            {% for foo in all_projects %}
+                                {% ifnotequal info.belong_project foo.project_name %}
+                                    <option value="{{ foo.project_name }}">{{ foo.project_name }}</option>
+                                {% endifnotequal %}
+
+                            {% endfor %}
+                            {% if info.belong_project != 'All' %}
                                 <option value="All">All</option>
-                                {% for foo in all_projects %}
-                                <option value="{{ foo.project_name}}">{{ foo.project_name }}</option>
-                                {% endfor %}
+                            {% endif %}
                         </select>
                     </li>
                     
-                    <li style="padding-top: 5px"><input  type="text" name="user"
+                    <li style="padding-top: 5px"><input value="{{ info.user }}"  type="text" name="user"
                                                         class="am-input-sm am-input-xm"
                                                         placeholder="负责人"/></li>
 
