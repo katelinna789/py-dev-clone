@@ -1122,10 +1122,10 @@ def project_list(request):
     if request.method == 'POST':
         projects = Project.objects.all().order_by("-update_time")
         project_name = request.POST.get('project')
+        user = request.POST.get('user')
         if project_name != "All":
             rs = Project.objects.filter(project_name=project_name)
-        user = request.POST.get('user')
-        if user:
+        elif user:
             rs = Project.objects.filter(responsible_name=user)
         paginator = Paginator(rs,5)
         page = request.GET.get('page')

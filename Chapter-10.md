@@ -6,13 +6,13 @@
 ### 创建模块的相关model 类
 
 ```
-class ModuleInfo(BaseTable):
+class Module(BaseTable):
     class Meta:
         verbose_name = '模块信息'
         db_table = 'ModuleInfo'
 
     module_name = models.CharField('模块名称', max_length=50, null=False)
-    belong_project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    belong_project = models.ForeignKey(Project, on_delete=models.CASCADE)
     test_user = models.CharField('测试负责人', max_length=50, null=False)
     simple_desc = models.CharField('简要描述', max_length=100, null=True)
     other_desc = models.CharField('其他信息', max_length=100, null=True)
@@ -740,7 +740,7 @@ def module_list(request):
                     rs = Module.objects.filter(id=module, belong_project=p, test_user=user).order_by("-update_time")
                 else:
                     rs = Module.objects.filter(id=module, belong_project=p).order_by("-update_time")
-                module = Module.objects.get(id=module)
+                module = Module.objects.get(id=module).module_name
             else:
                 if user:
                     rs = Module.objects.filter(belong_project=p, test_user=user).order_by("-update_time")
@@ -834,7 +834,9 @@ C:\Users\wang_>hrun -V
 
 ### 测试环境
 
-被测服务一个flask应用[api_server.py](./Chapter-10-code/hat/api_server.py)
+被测服务一个flask应用[api_server.py](./Chapter-10-code/demo/api_server.py)
+
+`pip install flask`
 
 该应用作为被测服务，主要有两类接口：
 
@@ -842,7 +844,7 @@ C:\Users\wang_>hrun -V
 * 支持 CRUD 操作的 RESTful APIs，所有接口的请求头域中都必须包含有效的 token
 
 
-编写一个测试api脚本[test_api.py](./Chapter-10-code/hat/test_api.py)
+编写一个测试api脚本[test_api.py](./Chapter-10-code/hat/demo/test_api.py)
 
 ```
 # 启动flask应用
