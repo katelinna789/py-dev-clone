@@ -542,7 +542,7 @@ def module_search_ajax(request):
 修改project_list.html模板
 
 ```
-        <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
+<div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
             <form id="pro_filter" method="post" action="{% url 'module_list' %}">
                 <ul>
                     <li style="padding-top: 5px">
@@ -565,7 +565,11 @@ def module_search_ajax(request):
 
                     <li style="padding-top: 5px">
                         <select name="module" class=" am-input-zm am-input-xm" id="module">
+                            {% if info.belong_module == "请选择" %}
                             <option selected value="{{ info.belong_module }}">{{ info.belong_module }}</option>
+                            {% else %}
+                            <option selected value="{{ info.belong_module.id }}">{{ info.belong_module.module_name }}</option>
+                            {% endif %}
                         </select>
                     </li>
                     <li style="padding-top: 5px"><input value="{{ info.user }}" type="text" name="user"
@@ -662,12 +666,13 @@ def module_search_ajax(request):
 @csrf_exempt
 def module_list(request):
     if request.method == 'GET':
+        info = {'belong_project': 'All', 'belong_module': "请选择"}
         projects = Project.objects.all().order_by("-update_time")
         rs = Module.objects.all().order_by("-update_time")
         paginator = Paginator(rs,5)
         page = request.GET.get('page')
         objects = paginator.get_page(page)
-        context_dict = {'module': objects, 'projects': projects}
+        context_dict = {'module': objects, 'projects': projects, 'info':info}
         return render(request,"module_list.html",context_dict)
     if request.method == 'POST':
         projects = Project.objects.all().order_by("-update_time")
@@ -688,6 +693,7 @@ def module_list(request):
                     rs = Module.objects.filter(id=module, belong_project=p, test_user=user).order_by("-update_time")
                 else:
                     rs = Module.objects.filter(id=module, belong_project=p).order_by("-update_time")
+                module = Module.objects.get(id=module)
             else:
                 if user:
                     rs = Module.objects.filter(belong_project=p, test_user=user).order_by("-update_time")
@@ -696,7 +702,7 @@ def module_list(request):
     paginator = Paginator(rs,5)
     page = request.GET.get('page')
     objects = paginator.get_page(page)
-    context_dict = {'module': objects, 'projects': projects}
+    context_dict = {'module': objects, 'projects': projects, 'info': {'belong_project': project,'belong_module': module, 'user':user}}
     return render(request,"module_list.html",context_dict)
 ```
 处理搜索的具体逻辑
@@ -740,7 +746,7 @@ def module_list(request):
                     rs = Module.objects.filter(id=module, belong_project=p, test_user=user).order_by("-update_time")
                 else:
                     rs = Module.objects.filter(id=module, belong_project=p).order_by("-update_time")
-                module = Module.objects.get(id=module).module_name
+                module = Module.objects.get(id=module)
             else:
                 if user:
                     rs = Module.objects.filter(belong_project=p, test_user=user).order_by("-update_time")
@@ -844,7 +850,7 @@ C:\Users\wang_>hrun -V
 * 支持 CRUD 操作的 RESTful APIs，所有接口的请求头域中都必须包含有效的 token
 
 
-编写一个测试api脚本[test_api.py](./Chapter-10-code/hat/demo/test_api.py)
+编写一个测试api脚本[test_api.py](./Chapter-10-code/demo/test_api.py)
 
 ```
 # 启动flask应用
@@ -970,7 +976,7 @@ json文件如下
 
 现在我们只需要知道如下几点：
 
-每个 YJSON 文件对应一个测试用例（testcase）
+每个 JSON 文件对应一个测试用例（testcase）
 每个测试用例为一个list of dict结构，其中可能包含全局配置项（config）和若干个测试步骤（test）
 config 为全局配置项，作用域为整个测试用例
 test 对应单个测试步骤，作用域仅限于本身
