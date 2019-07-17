@@ -42,10 +42,10 @@ def module_delete(request):
 
 ### 定义url
 ```
-    path('module/list', views.project_list, name='module_list'),
-    path('module/add', views.project_add, name='module_add'),
-    path('module/edit', views.project_edit, name='module_edit'),
-    path('module/delete', views.project_delete, name='module_delete'),
+    path('module/list', views.module_list, name='module_list'),
+    path('module/add', views.module_add, name='module_add'),
+    path('module/edit', views.module_edit, name='module_edit'),
+    path('module/delete', views.module_delete, name='module_delete'),
 ```
 ### 修改module_add视图
 
