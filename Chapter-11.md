@@ -477,7 +477,7 @@ def key_value_list(keyword, **kwargs):
                         msg = type_change(type, val)
                         if msg == 'exception':
                             return tips
-                        value['expected'] = msg
+                        value['expect'] = msg
                     elif keyword == 'extract':
                         value[key] = val
                     elif keyword == 'variables':
@@ -871,7 +871,283 @@ def id_del(value):
         return False
 ```
 
+## locuts性能测试
+Locust 是一个易于使用的分布式用户负载测试工具。它用于对Web站点（或其他系统）进行负载测试，并计算出一个系统可以处理多少并发用户。Locust 完全基于事件，因此可以在一台机器上支持数千个并发用户。与许多其他基于事件的应用程序相比，它不使用回调，而是使用基于 gevent 的轻量级进程。每个 Locust 都在自己的进程中运行（正确的说法是greenlet）。这允许你用Python编写非常有表现力的场景，而不用使用回调使代码复杂化。
+
+
+[locuts](https://www.locust.io/)
+
+### 安装
+`pip install locustio -i https://pypi.douban.com/simple/`
+
+### 功能
+1. 使用纯Python代码编写用户测试场景
+
+不需要笨重的UI或臃肿的XML—只需要像通常那样编写代码即可。基于协程而不是回调，您的代码看起来和行为都像正常的Python代码。
+
+2. 分布式和可伸缩-支持成千上万的用户
+
+Locust 支持在多台机器上运行负载测试。由于基于事件，即使一个 Locust 节点也可以在一个进程中处理数千个用户。这背后的部分原因是，即使您模拟了那么多用户，也不是所有用户都在积极地攻击您的系统。通常，用户都在无所事事地考虑下一步该做什么。使得每秒请求数不等于在线用户数。
+
+3. 基于Web的UI
+
+Locust 有一个简洁的由 HTML+JS 生成的用户界面，可以实时显示相关的测试细节。由于UI是基于Web的，所以它是跨平台的，并且易于扩展。
+
+4. 可以测试任何系统
+
+尽管 Locust 是面向Web的，但它几乎可以用于测试任何系统。无论你想测试什么，只要编写一个客户端，然后让它像蝗虫一样成群结队！这是超级简单的！
+
+
+### 快速开始
+
+新建locustfile.py 文件
+
+```
+from locust import HttpLocust, TaskSet
+
+def login(l):
+    l.client.post("/login", {"username":"ellen_key", "password":"education"})
+
+def logout(l):
+    l.client.post("/logout", {"username":"ellen_key", "password":"education"})
+
+def index(l):
+    l.client.get("/")
+
+def profile(l):
+    l.client.get("/profile")
+
+class UserBehavior(TaskSet):
+    tasks = {index: 2, profile: 1}
+
+    def on_start(self):
+        login(self)
+
+    def on_stop(self):
+        logout(self)
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```
+在这里，我们定义了许多 Locust 任务，这些任务是普通的Python可调用函数，它们只接受一个参数(一个 Locust 类实例)。这些 Locust 任务集中在 TaskSet 类的子类的 tasks 属性中。然后我们定义了一个 HttpLocust 类的子类，它代表一个用户。在这个类中，我们定义了一个模拟用户在执行任务之间应该等待多长时间，以及哪个TaskSet类定义了用户的“行为”。其中，TaskSet 类可以嵌套
 
 
 
+启动locust
+locustfile.py 位于当前目录
 
+`locust --host=http://127.0.0.1  --web-host="127.0.0.1"`
+
++ --host 目标主机
++ --web-host locust web端口
+
+如果 Locust 文件位于一个子目录或者使用了其他的名称，那么可以使用 -f 参数来指定
+
+`locust -f ./locustfile.py --host=http://127.0.0.1  --web-host="127.0.0.1" `
+
+要运行分布在多个进程中的 Locust，我们可以通过 --master 参数来指定并启动一个主进程：
+
+`locust -f ./locustfile.py --master --host=http://127.0.0.1  --web-host="127.0.0.1"`
+
+然后，我们就可以启动任意数量的从属进程了：
+`locust -f ./locustfile.py --slave --host=http://127.0.0.1`
+
+如果我们想在多台机器上运行 Locust，我们还必须在启动从机时指定主机，将下面的masterip替换为master机器的ip
+`locust -f ./locustfile.py --slave  --master-host=masterip --host=http://127.0.0.1`
+
+
+### 编写一个locustfile
+locustfile 是一个普通的Python文件。惟一的要求在这个文件中必须至少定义一个继承自 Locust 类（我们称它为locust类）的类。
+
+
+1. task_set 属性
+task_set 属性应该指向一个定义了用户行为的 TaskSet 类，下面将对其进行更详细的描述。
+
+2. min_wait 和 max_wait 属性
+除了 task_set 属性外，通常还需要声明 min_wait 和 max_wait 属性。这些分别是模拟用户在执行每个任务之间等待的最小时间和最大时间，单位为毫秒。min_wait 和 max_wait 默认值均为1000，因此，如果没有声明 min_wait 和 max_wait，则 locust 将在每个任务之间始终等待1秒。
+
+```
+class UserBehavior(TaskSet):
+    tasks = {index: 2, profile: 1}
+
+    def on_start(self):
+        login(self)
+
+    def on_stop(self):
+        logout(self)
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```
+
+上面的locustfile.py 还可以写为
+```
+from locust import HttpLocust, TaskSet, task
+
+class UserBehavior(TaskSet):
+    def on_start(self):
+        """ on_start is called when a Locust start before any task is scheduled """
+        self.login()
+
+    def on_stop(self):
+        """ on_stop is called when the TaskSet is stopping """
+        self.logout()
+
+    def login(self):
+        self.client.post("/login", {"username":"ellen_key", "password":"education"})
+
+    def logout(self):
+        self.client.post("/logout", {"username":"ellen_key", "password":"education"})
+
+    @task(2)
+    def index(self):
+        self.client.get("/")
+
+    @task(1)
+    def profile(self):
+        self.client.get("/profile")
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```
+使用@task 装饰器来声明任务
+
+### TaskSet 类
+
+TaskSet 就像它的名字一样，是一组任务，这些任务都是普通的Python可调用对象。如果我们对一个拍卖的网站进行负载测试，那么可以执行诸如 “加载其实页面”、“搜索某些产品” 和 “出价” 等操作。
+
+当启动负载测试时，派生的 Locust 类的每个实例将开始执行它们的 TaskSet。然后，每个 TaskSet 将选择一个任务并执行。之后等待若干毫秒，这个等待时间是均匀分布在 Locust 类的 min_wait 和 max_wait 属性值之间的一个随机数（如果 TaskSet 设置了自己的 min_wait 和 max_wait 属性，则将使用它自己设置的值）。然后它将再次选择要执行的任务，再次等待。以此类推。
+
+
+### 定义任务
+定义 TaakSet 的 tasks 的典型方式是使用 @task 装饰器
+
+```
+    @task(2)
+    def index(self):
+        self.client.get("/")
+
+    @task(1)
+    def profile(self):
+        self.client.get("/profile")
+```
+
+也可以通过设置 tasks 属性来定义TaskSet 的任务
+
+```
+def index(l):
+    l.client.get("/")
+
+def profile(l):
+    l.client.get("/profile")
+
+class UserBehavior(TaskSet):
+    tasks = {index: 2, profile: 1}
+```
+
+### on_start 和 on_stop 方法
+TaskSet 类可以声明 on_start 方法或 on_stop 方法。on_start 方法在虚拟用户开始执行 TaskSet 类时调用，而on_stop （locust.core.TaskSet.on_stop()）方法在 TaskSet 停止时调用
+
+### 发起HTTP请求
+
+为了对系统进行真是的负载测试，我们需要发出HTTP请求,使用HttpLocust 类的
+
+```
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```
+
+### 发起xml-rpc 请求
+```
+import time
+import xmlrpclib
+
+from locust import Locust, TaskSet, events, task
+
+
+class XmlRpcClient(xmlrpclib.ServerProxy):
+    """
+    Simple, sample XML RPC client implementation that wraps xmlrpclib.ServerProxy and 
+    fires locust events on request_success and request_failure, so that all requests 
+    gets tracked in locust's statistics.
+    """
+    def __getattr__(self, name):
+        func = xmlrpclib.ServerProxy.__getattr__(self, name)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                result = func(*args, **kwargs)
+            except xmlrpclib.Fault as e:
+                total_time = int((time.time() - start_time) * 1000)
+                events.request_failure.fire(request_type="xmlrpc", name=name, response_time=total_time, exception=e)
+            else:
+                total_time = int((time.time() - start_time) * 1000)
+                events.request_success.fire(request_type="xmlrpc", name=name, response_time=total_time, response_length=0)
+                # In this example, I've hardcoded response_length=0. If we would want the response length to be 
+                # reported correctly in the statistics, we would probably need to hook in at a lower level
+        
+        return wrapper
+
+
+class XmlRpcLocust(Locust):
+    """
+    This is the abstract Locust class which should be subclassed. It provides an XML-RPC client
+    that can be used to make XML-RPC requests that will be tracked in Locust's statistics.
+    """
+    def __init__(self, *args, **kwargs):
+        super(XmlRpcLocust, self).__init__(*args, **kwargs)
+        self.client = XmlRpcClient(self.host)
+
+
+class ApiUser(XmlRpcLocust):
+    
+    host = "http://127.0.0.1:8877/"
+    min_wait = 100
+    max_wait = 1000
+    
+    class task_set(TaskSet):
+        @task(10)
+        def get_time(self):
+            self.client.get_time()
+        
+        @task(5)
+        def get_random_number(self):
+            self.client.get_random_number(0, 100)
+```
+
+服务端代码
+
+```
+import random
+import time
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+
+
+def get_time():
+    time.sleep(random.random())
+    return time.time()
+
+def get_random_number(low, high):
+    time.sleep(random.random())
+    return random.randint(low, high)
+
+server = SimpleXMLRPCServer(("localhost", 8877))
+print("Listening on port 8877...")
+server.register_function(get_time, "get_time")
+server.register_function(get_random_number, "get_random_number")
+server.serve_forever()
+```
+### 例子
+
+官方例子
+```
+https://github.com/locustio/locust/tree/master/examples
+```

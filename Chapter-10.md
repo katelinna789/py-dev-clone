@@ -431,7 +431,7 @@ def module_list(request):
 
 ```
 
-### 修改project_edit视图
+### 修改moddule_edit视图
 ```
 @csrf_exempt
 def module_edit(request):
@@ -468,7 +468,7 @@ def module_edit(request):
 
 点击编辑测试
 
-### 修改project_list 添加删除功能
+### 修改module_list 添加删除功能
 找到删除button 修改为
 
 ```
