@@ -11,7 +11,7 @@ class DebugTalk(BaseTable):
         verbose_name = '驱动py文件'
         db_table = 'DebugTalk'
 
-    belong_project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    belong_project = models.ForeignKey(Project, on_delete=models.CASCADE)
     debugtalk = models.TextField(null=True, default='#debugtalk.py')
 ```
 执行数据迁移命令
@@ -143,12 +143,12 @@ class TestConfig(BaseTable):
 添加view config_add
 
 ```
-def config_add(requests):
+def config_add(request):
     if request.method == 'GET':
         context_dict = {
             'project': Project.objects.all().values('project_name').order_by('-create_time')
         }
-        return render(requests, 'config_add.html', context_dict)
+        return render(request, 'config_add.html', context_dict)
 ```
 
 添加url 
@@ -198,7 +198,7 @@ function config_ajax(type) {
         }
     };
     if (type === 'edit') {
-        url = '/httpapitest/config/edit';
+        url = '#';
     } else {
         url = '/httpapitest/config/add';
     }
@@ -374,7 +374,7 @@ def config_add(request):
 注意这里使用了函数config_logic，我们会在utils.py中定义，在创建utils.py前，我们先配置下日志
 
 配置django日志
-在settings.py 添加以下日志配置，并在static统计目录创建logs目录
+在settings.py 添加以下日志配置，并在static统一目录创建logs目录
 
 ```
 LOGGING = {
@@ -616,8 +616,8 @@ def add_config_data(type, **kwargs):
                 return '用例或配置已存在，请重新编辑'
         else:
             index = config_info.get('test_index')
-            if name != config_opt.get_case_by_id(index, type=False) \
-                    and config_opt.get_case_name(name, module, project) > 0:
+            if name != TestConfig.objects.get(id=index).name \
+                    and config_opt.get_config_name(name, module, project) > 0:
                 return '用例或配置已在该模块中存在，请重新命名'
             config_opt.update_config(belong_module, **kwargs)
             logger.info('{name}配置更新成功: {kwargs}'.format(name=name, kwargs=kwargs))
@@ -735,8 +735,8 @@ def config_list(request):
 
 ```
 path('config/list', views.config_list, name='config_list'),
-path('config/copy', views.config_list, name='config_copy'),
-path('config/delete', views.config_list, name='config_delete'),
+path('config/copy', views.config_copy, name='config_copy'),
+path('config/delete', views.config_delete, name='config_delete'),
 path('config/edit/<int:id>', views.config_edit, name='config_edit'),
 ```
 
@@ -759,6 +759,9 @@ def config_edit(request):
 
 [config_list.html](./Chapter-11-code/hat/templates/config_list.html)
 注意模板中的搜索，复制，删除，编辑相关的功能
+
+在commons.js 中添加copy_data_ajax
+[commons.js](./Chapter-11-code/hat/static/assets/js/commons.js)
 
 
 测试列表功能，输入http://127.0.0.1:8000/httpapitest/config/list
@@ -802,7 +805,8 @@ def config_copy(request):
 ```
 
 点击复制，测试复制功能
-更新base.html 添加配置管理菜单的链接
+
+更新base.html 添加配置列表菜单的链接
 7. 编辑功能
 
 修改config_edit视图
@@ -871,7 +875,7 @@ def id_del(value):
         return False
 ```
 
-## locuts性能测试
+## locust性能测试
 Locust 是一个易于使用的分布式用户负载测试工具。它用于对Web站点（或其他系统）进行负载测试，并计算出一个系统可以处理多少并发用户。Locust 完全基于事件，因此可以在一台机器上支持数千个并发用户。与许多其他基于事件的应用程序相比，它不使用回调，而是使用基于 gevent 的轻量级进程。每个 Locust 都在自己的进程中运行（正确的说法是greenlet）。这允许你用Python编写非常有表现力的场景，而不用使用回调使代码复杂化。
 
 
