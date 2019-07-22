@@ -61,27 +61,19 @@ def project_add(request):
 
 @csrf_exempt
 def project_list(request):
-    if request.method == "GET":
-        info = {'belong_project': "All"}
+    if request.method == 'GET':
         projects = Project.objects.all().order_by("-update_time")
-        rs = Project.objects.all().order_by("-update_time")
-        paginator = Paginator(rs,5)
-        page = request.GET.get('page')
-        objects = paginator.get_page(page)
-        context_dict = {'project': objects,'all_projects': projects, 'info': info}
-        return render(request,"project_list.html",context_dict)
-    if request.method == 'POST':
-        projects = Project.objects.all().order_by("-update_time")
-        project_name = request.POST.get('project')
-        user = request.POST.get('user')
+        project_name = request.GET.get('project','All')
+        user = request.GET.get('user', '负责人')
         info = {'belong_project': project_name, 'user':user}
 
+        
         if project_name != "All":
             rs = Project.objects.filter(project_name=project_name)
-        elif user:
+        elif user != "负责人":
             rs = Project.objects.filter(responsible_name=user)
-        #else:
-        #    rs = projects
+        else:
+            rs = projects
         paginator = Paginator(rs,5)
         page = request.GET.get('page')
         objects = paginator.get_page(page)

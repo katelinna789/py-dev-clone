@@ -117,10 +117,10 @@
         </div>
 
         <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
-            <form id="pro_filter" method="post" action="{% url 'project_list' %}">
+            <form id="pro_filter">
                 <ul>
                     <li style="padding-top: 5px">
-                        <select name="project" class="am-input-zm am-input-xm">
+                        <select name="project" id="projectselect" class="am-input-zm am-input-xm">
                             <option value="{{ info.belong_project }}"
                                     selected>{{ info.belong_project }}</option>
 
@@ -145,7 +145,7 @@
                                 class="am-btn am-radius am-btn-xs am-btn-success">搜索
                         </button>
                     </li>
-                </ul>
+                </form
             </form>
         </div>
         <form class="am-form am-g">
@@ -224,7 +224,7 @@
                  <span class="step-links">
                                 {% if project.has_previous %}
                                    
-                                    <a href="?page={{ project.previous_page_number }}">上一页</a>
+                                    <a href="#" id='prepage' onclick="previous()">上一页</a>
                                 {% endif %}
                         
                                 <span class="current">
@@ -232,7 +232,8 @@
                                 </span>
                         
                                 {% if project.has_next %}
-                                    <a href="?page={{ project.next_page_number }}">下一页</a>
+                                
+                                   <a href="#" id='nextpage' onclick="next()"> 下一页</a>
                                     
                                 {% endif %}
                             </span>
@@ -269,6 +270,20 @@
                 }
             });
         }
+        {% if project.has_next %}
+        function next(){
+           var params = $("#pro_filter").serialize() + "&page={{ project.next_page_number }}";
+           url = "{% url 'project_list' %}" + "?" + params
+           $("#nextpage").attr('href',url); 
+        }
+        {% endif %}
+        {% if project.has_previous%}
+        function previous(){
+            var params = $("#pro_filter").serialize() + "&page={{ project.previous_page_number }}";
+           url = "{% url 'project_list' %}" + "?" + params
+           $("#prepage").attr('href',url); 
+        }
+        {% endif %}
     </script>
 
 {% endblock %}
