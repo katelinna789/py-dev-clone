@@ -135,53 +135,46 @@ templatetags/custom_tags.py添加自定义过滤器 convert_eval,id_del
 @csrf_exempt
 def case_list(request):
     if request.method == 'GET':
-        info = {'belong_project': 'All', 'belong_module': "请选择"}
+        env = Env.objects.all()
         projects = Project.objects.all().order_by("-update_time")
-        rs = TestCase.objects.all().order_by("-update_time")
-        paginator = Paginator(rs,5)
-        page = request.GET.get('page')
-        objects = paginator.get_page(page)
-        context_dict = {'case': objects, 'projects': projects, 'info': info}
-        return render(request,"case_list.html",context_dict)
-    if request.method == 'POST':
-        projects = Project.objects.all().order_by("-update_time")
-        project = request.POST.get("project")
-        module = request.POST.get("module")
-        name = request.POST.get("name")
-        user = request.POST.get("user")
+
+        project = request.GET.get('project','All')
+        module = request.GET.get('module', "请选择")
+        name = request.GET.get('name','')
+        user = request.GET.get('user','')
         
         if project == "All":
             if name:
-                rs = TestConfig.objects.filter(name=name)
+                rs = TestCase.objects.filter(name=name)
             elif user:
-                rs = TestConfig.objects.filter(author=user).order_by("-update_time")
+                rs = TestCase.objects.filter(author=user).order_by("-update_time")
             else:
-                rs = TestConfig.objects.all().order_by("-update_time")
+                rs = TestCase.objects.all().order_by("-update_time")
         else:
             if module != "请选择":
                 m = Module.objects.get(id=module)
                 if name:
-                    rs = TestConfig.objects.filter(belong_module=m, belong_project=project, name=name)
+                    rs = TestCase.objects.filter(belong_module=m, belong_project=project, name=name)
                 elif user:
-                    rs = TestConfig.objects.filter(belong_project=project,author=user).order_by("-update_time")
+                    rs = TestCase.objects.filter(belong_project=project,author=user).order_by("-update_time")
                 else:
-                    rs = TestConfig.objects.filter(belong_module=m, belong_project=project).order_by("-update_time")
+                    rs = TestCase.objects.filter(belong_module=m, belong_project=project).order_by("-update_time")
                 module = m
                 logger.info(module)
                 
             else:
                 if name:
-                    rs = TestConfig.objects.filter(belong_project=project, name=name)
+                    rs = TestCase.objects.filter(belong_project=project, name=name)
                 elif user:
-                    rs = TestConfig.objects.filter(belong_project=project, author=user).order_by("-update_time")
+                    rs = TestCase.objects.filter(belong_project=project, author=user).order_by("-update_time")
                 else:
-                    rs = TestConfig.objects.filter(belong_project=project).order_by("-update_time")
-                
-    paginator = Paginator(rs,5)
-    page = request.GET.get('page')
-    objects = paginator.get_page(page)
-    context_dict = {'config': objects, 'projects': projects, 'info': {'belong_project': project,'belong_module': module, 'user':user}}
-    return render(request,"config_list.html",context_dict)
+                    rs = TestCase.objects.filter(belong_project=project).order_by("-update_time")
+        info = {'belong_project': project, 'belong_module': module, 'name': name, 'user':user}        
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'case': objects, 'projects': projects, 'info':info}
+        return render(request,"case_list.html",context_dict)
 ```
 
 
@@ -293,7 +286,7 @@ def test_run(request):
 
         run_test_by_type(id, base_url, testcase_dir_path, type)
         runner.run(testcase_dir_path)
-        shutil.rmtree(testcase_dir_path)
+        #shutil.rmtree(testcase_dir_path)
         summary = timestamp_to_datetime(runner._summary, type=False)
         print(summary)
 
@@ -435,7 +428,7 @@ def suite_list(request):
         
         projects = Project.objects.all().order_by("-update_time")
         project_name = request.GET.get('project','All')
-       
+        env = Env.objects.all()
         name = request.GET.get('name', '套件名称')
         info = {'belong_project': project_name, 'name':name}
         if project_name != "All":
@@ -449,7 +442,7 @@ def suite_list(request):
         paginator = Paginator(rs,5)
         page = request.GET.get('page')
         objects = paginator.get_page(page)
-        context_dict = {'suite': objects, 'info': info, 'project': projects }
+        context_dict = {'suite': objects, 'info': info, 'project': projects, 'env': env }
         return render(request,"suite_list.html",context_dict)
 
 @csrf_exempt
@@ -468,12 +461,13 @@ def suite_add(request):
         }
         return render(request, 'suite_add.html', context_dict)
 
+@csrf_exempt
 def suite_edit(request, id=None):
     if request.is_ajax():
         kwargs = json.loads(request.body.decode('utf-8'))
         msg = edit_suite_data(**kwargs)
         if msg == 'ok':
-            return HttpResponse(reverse('env_list'))
+            return HttpResponse(reverse('suite_list'))
         else:
             return HttpResponse(msg)
     info = suite_info = TestSuite.objects.get(id=id)
