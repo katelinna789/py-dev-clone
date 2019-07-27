@@ -1,5 +1,5 @@
 from django.db import models
-from .managers import TestConfigManager, TestCaseManager
+from .managers import TestConfigManager, TestCaseManager, EnvManager
 
 # Create your models here.
 
@@ -69,3 +69,36 @@ class TestCase(BaseTable):
     author = models.CharField('创建者', max_length=20, null=False)
     request = models.TextField('请求信息', null=False)
     objects = TestCaseManager()
+
+class TestReports(BaseTable):
+    class Meta:
+        verbose_name = "测试报告"
+        db_table = 'TestReports'
+
+    report_name = models.CharField(max_length=40, null=False)
+    start_at = models.CharField(max_length=40, null=True)
+    status = models.BooleanField()
+    testsRun = models.IntegerField()
+    successes = models.IntegerField()
+    reports = models.TextField()
+
+
+class Env(BaseTable):
+    class Meta:
+        verbose_name = '环境管理'
+        db_table = 'EnvInfo'
+
+    env_name = models.CharField(max_length=40, null=False, unique=True)
+    base_url = models.CharField(max_length=40, null=False)
+    simple_desc = models.CharField(max_length=50, null=False)
+    objects = EnvManager()
+
+
+class TestSuite(BaseTable):
+    class Meta:
+        verbose_name = '用例集合'
+        db_table = 'TestSuite'
+
+    belong_project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    suite_name = models.CharField(max_length=100, null=False)
+    include = models.TextField(null=False)

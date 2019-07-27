@@ -2,7 +2,7 @@ import os
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import TestCase, Module, Project, DebugTalk,TestConfig
+from .models import TestCase, Module, Project, DebugTalk,TestConfig, TestSuite
 from .utils import dump_python_file, dump_yaml_file
 
 
@@ -16,9 +16,7 @@ def run_by_single(index, base_url, path):
     config = {
         'config': {
             'name': '',
-            'request': {
-                'base_url': base_url
-            }
+            'base_url': base_url
         }
     }
     testcase_list = []
@@ -136,8 +134,8 @@ def run_by_module(id, base_url, path):
     :param base_url: str：环境地址
     :return: list
     """
-    obj = ModuleInfo.objects.get(id=id)
-    test_index_list = TestCaseInfo.objects.filter(belong_module=obj, type=1).values_list('id')
+    obj = Module.objects.get(id=id)
+    test_index_list = TestCase.objects.filter(belong_module=obj).values_list('id')
     for index in test_index_list:
         run_by_single(index[0], base_url, path)
 
@@ -149,8 +147,8 @@ def run_by_project(id, base_url, path):
     :param base_url: 环境地址
     :return: list
     """
-    obj = ProjectInfo.objects.get(id=id)
-    module_index_list = ModuleInfo.objects.filter(belong_project=obj).values_list('id')
+    obj = Project.objects.get(id=id)
+    module_index_list = Module.objects.filter(belong_project=obj).values_list('id')
     for index in module_index_list:
         module_id = index[0]
         run_by_module(module_id, base_url, path)

@@ -29,4 +29,11 @@ urlpatterns = [
     path('case/copy', views.case_copy, name='case_copy'),
     path('test/test_run', views.test_run, name='test_run'),
     path('test/test_batch_run', views.test_batch_run, name='test_batch_run'),
+    path('report/list', views.report_list, name='report_list'),
+    path('env/list', views.env_list, name='env_list'),
+    path('env/set', views.env_set, name='env_set'),
+    path('suite/list', views.suite_list, name='suite_list'),
+    path('suite/add', views.suite_add, name="suite_add"),
+    path('suite/edit/<int:id>', views.suite_edit, name='suite_edit'),
+    path('suite/delete', views.suite_delete, name='suite_delete'),
 ]

@@ -164,3 +164,13 @@ LOGGING = {
         }
     }
 }
+
+
+
+CELERY_BROKER_URL = 'redis://192.168.1.5:6379/0'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+CELERY_TASK_RESULT_EXPIRES = 7200  # celery任务执行结果的超时时间，
+CELERYD_CONCURRENCY = 1 if DEBUG else 10 # celery worker的并发数 也是命令行-c指定的数目 根据服务器配置实际更改 一般25即可
+CELERYD_MAX_TASKS_PER_CHILD = 100  # 每个worker执行了多少任务就会死掉

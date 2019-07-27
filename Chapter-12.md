@@ -1,9 +1,9 @@
 # 第十二天
 
 ## 用例管理
+测试用例的增删改查
 
-
-1. 添加model 类TestCase
+###  添加model 类TestCase
 ```
 class TestCase(BaseTable):
     class Meta:
@@ -16,12 +16,12 @@ class TestCase(BaseTable):
     author = models.CharField('创建者', max_length=20, null=False)
     request = models.TextField('请求信息', null=False)
     objects = TestCaseManager()
-
+```
 执行数据库迁移命令
 
-2. 添加用例
+###  添加用例
 
-添加视图函数 
+1. 添加视图函数 
 
 ```
 @csrf_exempt
@@ -85,25 +85,32 @@ def case_delete(request):
 def cae_copy(request):
     pass
 ```
+导入函数caselogic, 该函数下面在utils.py 中定义
+from .utils import case_logic
 
-在utils.py 中添加case_logic， add_case_data update_include 函数
+
+2. 添加视图函数所使用的函数
+在utils.py 中添加case_logic， add_case_data函数
 
 [utils.py](./Chapter-12-code/hat/httpapitest/utils.py)
 
-
+3. 添加Testcase类的 管理类 
 在managers.py 添加 TestCaseManager 类
 
 [managers.py](./Chapter-12-code/hat/httpapitest/managers.py)
 
 修改models.py 给TestCase类添加属性`objects = TestCaseManager()`
 
-添加模板文件 case_add.html
+4. 添加模板文件 case_add.html
 
 [case_add.html](./Chapter-12-code/hat/templates/case_add.html)
 
-templatetags/custom_tags.py添加自定义过滤器 convert_eval id_del
+5. 添加模板case_add.html 所使用的过滤器conver_eval, id_del
+
+templatetags/custom_tags.py添加自定义过滤器 convert_eval,id_del
 [custom_tags.py](./Chapter-12-code/hat/httpapitest/templatetags/custom_tags.py)
 
+6. 在commons.js 中添加case_add.html 中使用的js 函数 case_ajax
 在commons.js中添加函数case_ajax
 
 [commons.js](./Chapter-12-code/hat/static/assets/js/commons.js)
@@ -120,7 +127,7 @@ templatetags/custom_tags.py添加自定义过滤器 convert_eval id_del
 ```
 
 
-3. 用例列表 
+###  用例列表 
 
 更新case_list 视图
 
@@ -181,8 +188,9 @@ def case_list(request):
 添加模板case_list.html
 [case_list.html](./Chapter-12-code/hat/templates/case_list.html)
 
-4. 编辑功能
-更新case_edit 视图
+###  编辑功能
+
+1. 更新case_edit 视图
 ```
 @csrf_exempt
 def case_edit(request, id):
@@ -206,13 +214,13 @@ def case_edit(request, id):
         else:
             return HttpResponse(msg)
 ```
-5. 修改功能
-添加case_edit.html模板
+
+2. 添加case_edit.html模板
 
 [case_edit.html](./Chapter-12-code/hat/templates/case_edit.html)
 测试编辑功能
 
-6. 删除功能
+###  删除功能
 修改case_delete视图
 ```
 @csrf_exempt
@@ -227,7 +235,7 @@ def case_delete(request):
 
 测试删除功能
 
-7. 拷贝功能
+###  拷贝功能
 ```
 @csrf_exempt
 def case_copy(request):
@@ -249,7 +257,9 @@ def case_copy(request):
 测试拷贝功能
 
 ## 用例运行
-添加视图函数test_run
+执行测试用例
+
+1. 添加视图函数test_run
 ```
 @csrf_exempt
 def test_run(request):
@@ -291,7 +301,7 @@ def test_run(request):
 
 ```
 
-views.py 导入函数
+2. views.py 导入函数
 ```
 from .utils import  get_time_stamp,timestamp_to_datetime
 from httprunner.api import HttpRunner
@@ -299,64 +309,214 @@ from .runner import run_test_by_type,run_by_single
 import logging
 import os,shutil
 ```
-
+3. 创建要导入的函数
 在utils.py 文件中添加dump_yaml_file，dump_python_file，get_time_stamp，timestamp_to_datetime
-```
-def dump_yaml_file(yaml_file, data):
-    """ load yaml file and check file content format
-    """
-    with io.open(yaml_file, 'w', encoding='utf-8') as stream:
-        yaml.dump(data, stream, indent=4, default_flow_style=False, encoding='utf-8')
 
-
-def dump_python_file(python_file, data):
-    with io.open(python_file, 'w', encoding='utf-8') as stream:
-        stream.write(data)
-
-def get_time_stamp():
-    ct = time.time()
-    local_time = time.localtime(ct)
-    data_head = time.strftime("%Y-%m-%d %H-%M-%S", local_time)
-    data_secs = (ct - int(ct)) * 1000
-    time_stamp = "%s-%03d" % (data_head, data_secs)
-    return time_stamp
-
-
-def timestamp_to_datetime(summary, type=True):
-    if not type:
-        time_stamp = int(summary["time"]["start_at"])
-        summary['time']['start_datetime'] = datetime.datetime. \
-            fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
-
-    for detail in summary['details']:
-        try:
-            time_stamp = int(detail['time']['start_at'])
-            detail['time']['start_at'] = datetime.datetime.fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
-        except Exception:
-            pass
-
-        for record in detail['records']:
-            try:
-                time_stamp = int(record['meta_data']['request']['start_timestamp'])
-                record['meta_data']['request']['start_timestamp'] = \
-                    datetime.datetime.fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
-            except Exception:
-                pass
-    return summary
-```
+[utils.py](./Chapter-12-code/hat/httpapitest/utils.py)
 
 在httpapitest添加runer.py文件
-```
-```
+用例使用的是run_test_by_type,run_by_single，其它函数在批量运行时使用
 
-添加模板文件
+[runner.py](./Chapter-12-code/hat/httpapitest/runner.py)
+
+4. 添加模板文件
 
 [report_tempalte.html](./Chapter-12-code/hat/templates/report_template.html)
 
+5. 添加url
+```
+path('test/test_run', views.test_run, name='test_run'),
+```
+
 测试用例运行
+
+
+## 环境管理
+
+1.  添加model类
+```
+class Env(BaseTable):
+    class Meta:
+        verbose_name = '环境管理'
+        db_table = 'EnvInfo'
+
+    env_name = models.CharField(max_length=40, null=False, unique=True)
+    base_url = models.CharField(max_length=40, null=False)
+    simple_desc = models.CharField(max_length=50, null=False)
+    objects = EnvManager()
+```
+
+2.  managers.py 添加EnvManager类
+```
+class EnvManager(models.Manager):
+    def insert_env(self, **kwargs):
+        self.create(**kwargs)
+
+    def update_env(self, index, **kwargs):
+        obj = self.get(id=index)
+        obj.env_name = kwargs.pop('env_name')
+        obj.base_url = kwargs.pop('base_url')
+        obj.simple_desc = kwargs.pop('simple_desc')
+        obj.save()
+
+    def get_env_name(self, index):
+        return self.get(id=index).env_name
+
+    def delete_env(self, index):
+        self.get(id=index).delete()
+```
+3.  添加视图
+
+```
+def env_list(request):
+    if request.method == "GET":
+        env_name = request.GET.get('env_name','')
+        info = {'env_name': env_name}
+        if env_name:
+            rs = Env.objects.filter(env_name=env_name).order_by("-update_time")
+        else:
+            rs = Env.objects.all().order_by("-update_time")
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'env': objects, 'info': info }
+        return render(request,"env_list.html",context_dict)
+
+@csrf_exempt
+def env_set(request):
+    """
+    环境设置
+    :param request:
+    :return:
+    """
+
+    if request.is_ajax():
+        env_lists = json.loads(request.body.decode('utf-8'))
+        msg = env_data_logic(**env_lists)
+        if msg == 'ok':
+            return HttpResponse(reverse('env_list'))
+        else:
+            return HttpResponse(msg)
+        
+    elif request.method == 'GET':
+        return render(request, 'env_list.html')
+```
+
+4. 添加模板 env_list.html
+[env_list.html](./Chapter-12-code/hat/templates/env_list.html)
+
+5. 添加url
+```
+path('env/list', views.env_list, name='env_list'),
+path('env/set', views.env_set, name='env_set'),
+```
+
+## suite管理
+
+1. 添加model类
+```
+class TestSuite(BaseTable):
+    class Meta:
+        verbose_name = '用例集合'
+        db_table = 'TestSuite'
+
+    belong_project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    suite_name = models.CharField(max_length=100, null=False)
+    include = models.TextField(null=False)
+```
+
+2. 添加视图函数
+
+在views.py中添加视图函数 suite_list,suite_add,suite_edit,suite_delete视图函数
+
+```
+def suite_list(request):
+    if request.method == "GET":
+        
+        projects = Project.objects.all().order_by("-update_time")
+        project_name = request.GET.get('project','All')
+       
+        name = request.GET.get('name', '套件名称')
+        info = {'belong_project': project_name, 'name':name}
+        if project_name != "All":
+            belong_project = Project.objects.get(project_name=project_name)
+            rs = TestSuite.objects.filter(belong_project=belong_project)
+        elif name != "套件名称":
+            rs = TestSuite.objects.filter(suite_name=name)
+        else:
+            rs = projects
+        rs = TestSuite.objects.all().order_by("-update_time")
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'suite': objects, 'info': info, 'project': projects }
+        return render(request,"suite_list.html",context_dict)
+
+@csrf_exempt
+def suite_add(request):
+    if request.is_ajax():
+        kwargs = json.loads(request.body.decode('utf-8'))
+        msg = add_suite_data(**kwargs)
+        if msg == 'ok':
+            return HttpResponse(reverse('suite_list'))
+        else:
+            return HttpResponse(msg)
+
+    elif request.method == 'GET':
+        context_dict = {
+            'project': Project.objects.all().values('project_name').order_by('-create_time')
+        }
+        return render(request, 'suite_add.html', context_dict)
+
+def suite_edit(request, id=None):
+    if request.is_ajax():
+        kwargs = json.loads(request.body.decode('utf-8'))
+        msg = edit_suite_data(**kwargs)
+        if msg == 'ok':
+            return HttpResponse(reverse('env_list'))
+        else:
+            return HttpResponse(msg)
+    info = suite_info = TestSuite.objects.get(id=id)
+    context_dict = {
+        'project': Project.objects.all().values('project_name').order_by('-create_time'),
+        'info': info
+    }
+    return render(request, 'suite_edit.html', context_dict)
+
+
+@csrf_exempt
+def suite_delete(request):
+    if request.is_ajax():
+        data = json.loads(request.body.decode('utf-8'))
+        case_id = data.get('id')
+        case = TestSuite.objects.get(id=case_id)
+        case.delete()
+        return HttpResponse(reverse('suite_list'))
+```
+
+3. 添加模板
+
+添加suite管理所需要的模板文件, suite_add.html,suite_edit.html,suite_list.html
+
+[suite_add.html](./Chapter-12-code/hat/templates/suite_add.html)
+
+[suite_edit.html](./Chapter-12-code/hat/templates/suite_edit.html)
+
+[suite_list.html](./Chapter-12-code/hat/templates/suite_list.html)
+
+4. 添加url
+
+```
+    path('suite/list', views.suite_list, name='suite_list'),
+    path('suite/add', views.suite_add, name="suite_add"),
+    path('suite/edit/<int:id>', views.suite_edit, name='suite_edit'),
+    path('suite/delete', views.suite_delete, name='suite_delete'),
+```
 
 ## 批量运行
 
+### 用例批量运行
+1. 添加批量运行视图
 ```
 @csrf_exempt
 def test_batch_run(request):
@@ -399,3 +559,203 @@ def test_batch_run(request):
         print(summary)
         return render(request,'report_template.html', summary)
 ```
+
+2. 添加url
+```
+path('test/test_batch_run', views.test_batch_run, name='test_batch_run'),
+```
+### 测试用例批量运行
+
+### suite 批量运行
+
+
+### 模块批量运行功能
+修改module_list.html模板,找到运行按钮添加onclick属性，并在js部分添加下面js代码
+添加
+[module_list.html](./Chapter-12-code/hat/templates/module_list.html)
+
+两个运行button
+```
+                <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-bug"
+                         onclick="run_test('batch', 'module')">运行
+                </button>
+
+
+                                    <button type="button"
+                                            class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
+                                            data-am-popover="{content: '运行', trigger: 'hover focus'}"
+                                            onclick="run_test('{{ foo.id }}', '{% url 'test_run' %}', 'module')"
+                                            >
+                                        <span class="am-icon-bug"></span>
+                                    </button>
+
+
+```
+
+script 部分                                
+```     
+        $('#mode').change(function () {
+            if ($('#mode').val() == 'false') {
+                $('#report_name').removeAttr("readonly");
+            } else {
+                $('#report_name').attr('readonly', 'readonly');
+            }
+        });
+
+        function run_test(mode, type) {
+            if (mode === 'batch') {
+                if ($("input:checked").size() === 0) {
+                    myAlert("请至少选择一个模块运行！");
+                    return;
+                }
+            }
+            $('#select_env').modal({
+                relatedTarget: this,
+                onConfirm: function () {
+                    var data = {
+                        "id": $("#module_list").serializeJSON(),
+                        "env_name": $('#env_name').val(),
+                        "type": type,
+                        'report_name': $('#report_name').val()
+                    };
+                    if (mode !== 'batch') {
+                        data["id"] = mode;
+                    }
+                    if ($('#mode').val() === 'true') {
+                        if (mode === 'batch') {
+                            var json2map = JSON.stringify(data['id']);
+                            var obj = JSON.parse(json2map);
+                            obj['env_name'] = data['env_name'];
+                            obj['type'] = data['type'];
+                            post('{% url 'test_batch_run' %}', obj);
+                        } else {
+                            post('{% url 'test_run' %}', data);
+                        }
+                    } else {
+                        $.ajax({
+                            type: 'post',
+                            url: url,
+                            data: JSON.stringify(data),
+                            contentType: "application/json",
+                            success: function (data) {
+                                myAlert(data);
+                            },
+                            error: function () {
+                                myAlert('Sorry，服务器可能开小差啦, 请重试!');
+                            }
+                        });
+                    }
+                },
+                onCancel: function () {
+                }
+            });
+        }
+
+        $('#select_all').click(function () {
+            var isChecked = $(this).prop("checked");
+            $("input[name^='module']").prop("checked", isChecked);
+        })
+```
+添加id='select_env' 的modal
+```
+    <div class="am-modal am-modal-confirm" tabindex="-1" id="select_env">
+        <div class="am-modal-dialog">
+            <div class="am-modal-hd">HAT</div>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="control-label col-sm-3"
+                           style="font-weight: inherit; font-size: small ">运行环境:</label>
+                    <div class="col-sm-8">
+                        <select class="form-control" id="env_name" name="env_name">
+                            <option value="">自带环境</option>
+                            {% for foo in env %}
+                                <option value="{{ foo.base_url }}">{{ foo.env_name }}</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-3" for="report_name"
+                           style="font-weight: inherit; font-size: small ">报告名称：</label>
+                    <div class="col-sm-8">
+                        <input name="report_name" type="text" id="report_name" class="form-control"
+                               placeholder="默认时间戳命名" value="" readonly>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-3"
+                           style="font-weight: inherit; font-size: small ">执行方式:</label>
+                    <div class="col-sm-8">
+                        <select class="form-control" id="mode" name="mode">
+                            <option value="true">同步(执行完立即返回报告)</option>
+                            <option value="false">异步(后台执行，完毕后可查看报告)</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+            </form>
+
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>确定</span>
+            </div>
+        </div>
+    </div>
+
+```
+
+测试模块运行
+
+### 项目批量运行
+修改project_list.html模板,找到运行按钮添加onclick属性，并在js部分添加下面js代码
+[module_list.html](./Chapter-12-code/hat/templates/project_list.html)
+修改同module_list.html
+
+
+
+## celery
+
+Celery 是一个简单、灵活且可靠的，处理大量消息的分布式系统，并且提供维护这样一个系统的必需工具。是一个专注于实时处理的任务队列，同时也支持任务调度。
+
+
+任务队列用作跨线程或机器分配工作的机制。 任务队列的输入是为一个任务。任务队列通过消息系统borker实现。客户端往broker中加任务，worker进程不断监视broker中的任务队列以执行新的任务
+
+
+支持的常见broker
++ redis
++ rabbitmq
++ zookeeper
+
+安装支持redis的celery
+
+pip install celery -i https://pypi.douban.com/simple/
+
+
+
+编写tasks.py
+```
+from celery import Celery
+
+app = Celery('tasks', broker='redis://192.168.1.5:6379/0')
+
+@app.task
+def add(x, y):
+    return x + y
+```
+启动worker
+
+`celery -A tasks worker --loglevel=info  -P eventlet`
+
+client.py
+```
+from tasks import add
+add.delay(2,3) 
+```
+
+
+
+
+
+

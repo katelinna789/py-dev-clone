@@ -44,3 +44,20 @@ class TestCaseManager(models.Manager):
     def get_case_name(self, name, module_name, belong_project):
         return self.filter(belong_module__id=module_name).filter(name__exact=name).filter(
             belong_project__exact=belong_project).count()
+
+class EnvManager(models.Manager):
+    def insert_env(self, **kwargs):
+        self.create(**kwargs)
+
+    def update_env(self, index, **kwargs):
+        obj = self.get(id=index)
+        obj.env_name = kwargs.pop('env_name')
+        obj.base_url = kwargs.pop('base_url')
+        obj.simple_desc = kwargs.pop('simple_desc')
+        obj.save()
+
+    def get_env_name(self, index):
+        return self.get(id=index).env_name
+
+    def delete_env(self, index):
+        self.get(id=index).delete()

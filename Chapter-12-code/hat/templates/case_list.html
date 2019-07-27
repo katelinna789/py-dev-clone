@@ -89,7 +89,7 @@
         </div>
 
         <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
-            <form id="pro_filter" method="post" action="{% url 'case_list' %}">
+            <form id="pro_filter">
                 <ul>
                     <li style="padding-top: 5px">
                         <select name="project" class="am-input-zm am-input-xm"
@@ -242,7 +242,22 @@
             </div>
 
             <ul class="am-pagination am-fr">
-                {{ page_list }}
+                 <span class="step-links">
+                                {% if case.has_previous %}
+                                   
+                                    <a href="#" id='prepage' onclick="previous()">上一页</a>
+                                {% endif %}
+                        
+                                <span class="current">
+                                     {{ case.number }}/{{ case.paginator.num_pages }} 页.
+                                </span>
+                        
+                                {% if case.has_next %}
+                                
+                                   <a href="#" id='nextpage' onclick="next()"> 下一页</a>
+                                    
+                                {% endif %}
+                            </span>
             </ul>
 
 
@@ -326,7 +341,20 @@
             $("input[name^='testcase']").prop("checked", isChecked);
         });
 
-    
+        {% if case.has_next %}
+        function next(){
+           var params = $("#pro_filter").serialize() + "&page={{ case.next_page_number }}";
+           url = "{% url 'case_list' %}" + "?" + params
+           $("#nextpage").attr('href',url); 
+        }
+        {% endif %}
+        {% if case.has_previous%}
+        function previous(){
+            var params = $("#pro_filter").serialize() + "&page={{ case.previous_page_number }}";
+           url = "{% url 'case_list' %}" + "?" + params
+           $("#prepage").attr('href',url); 
+        }
+        {% endif %}
 
     </script>
 {% endblock %}
