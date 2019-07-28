@@ -4,6 +4,13 @@
 测试用例的增删改查
 
 ###  添加model 类TestCase
+
+添加Testcase类的 管理类 
+在managers.py 添加 TestCaseManager 类
+
+[managers.py](./Chapter-12-code/hat/httpapitest/managers.py)
+
+
 ```
 class TestCase(BaseTable):
     class Meta:
@@ -17,6 +24,8 @@ class TestCase(BaseTable):
     request = models.TextField('请求信息', null=False)
     objects = TestCaseManager()
 ```
+导入 TestCaseManager 类
+
 执行数据库迁移命令
 
 ###  添加用例
@@ -82,24 +91,21 @@ def case_edit(request):
 def case_delete(request):
     pass
 
-def cae_copy(request):
+def case_copy(request):
     pass
+
+
 ```
 导入函数caselogic, 该函数下面在utils.py 中定义
 from .utils import case_logic
+将视图函数module_search_ajax更新
 
 
 2. 添加视图函数所使用的函数
-在utils.py 中添加case_logic， add_case_data函数
+在utils.py 中添加case_logic， add_case_data, update_include函数
 
 [utils.py](./Chapter-12-code/hat/httpapitest/utils.py)
 
-3. 添加Testcase类的 管理类 
-在managers.py 添加 TestCaseManager 类
-
-[managers.py](./Chapter-12-code/hat/httpapitest/managers.py)
-
-修改models.py 给TestCase类添加属性`objects = TestCaseManager()`
 
 4. 添加模板文件 case_add.html
 
@@ -112,6 +118,7 @@ templatetags/custom_tags.py添加自定义过滤器 convert_eval,id_del
 
 6. 在commons.js 中添加case_add.html 中使用的js 函数 case_ajax
 在commons.js中添加函数case_ajax
+修改commons.js 中的auto_load 函数
 
 [commons.js](./Chapter-12-code/hat/static/assets/js/commons.js)
 
@@ -124,6 +131,7 @@ templatetags/custom_tags.py添加自定义过滤器 convert_eval,id_del
     path('case/list', views.case_list, name='case_list'),
     path('case/delete', views.case_delete, name='case_delete'),
     path('case/copy', views.case_copy, name='case_copy'),
+    
 ```
 
 
@@ -180,6 +188,18 @@ def case_list(request):
 
 添加模板case_list.html
 [case_list.html](./Chapter-12-code/hat/templates/case_list.html)
+
+添加依赖的url和视图
+```
+path('test/test_run', views.test_run, name='test_run'),
+path('test/test_batch_run', views.test_batch_run, name='test_batch_run'),
+
+def test_run(request):
+    pass
+
+def test_batch_run(request):
+    pass
+```
 
 ###  编辑功能
 

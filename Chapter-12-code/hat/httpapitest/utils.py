@@ -204,7 +204,7 @@ def add_config_data(type, **kwargs):
         else:
             index = config_info.get('test_index')
             if name != TestConfig.objects.get(id=index).name \
-                    and config_opt.get_case_name(name, module, project) > 0:
+                    and config_opt.get_config_name(name, module, project) > 0:
                 return '用例或配置已在该模块中存在，请重新命名'
             config_opt.update_config(belong_module, **kwargs)
             logger.info('{name}配置更新成功: {kwargs}'.format(name=name, kwargs=kwargs))

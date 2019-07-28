@@ -80,7 +80,7 @@
             <dl class="am-icon-home" style="float: right;"> 当前位置： 用例管理 > <a href="#">用例展示</a></dl>
             <dl>
                 <button type="button" class="am-btn am-btn-primary am-round am-btn-xs am-icon-plus"
-                        onclick="location='/api/add_case/'">新增用例
+                        onclick="location='{% url 'case_add' %}'">新增用例
                 </button>
                 <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-bug"
                         onclick="my_submit()">运行
