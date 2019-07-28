@@ -414,6 +414,7 @@ def env_set(request):
     elif request.method == 'GET':
         return render(request, 'env_list.html')
 ```
+utils.py中添加evn_data_logic函数
 
 4. 添加模板 env_list.html
 [env_list.html](./Chapter-12-code/hat/templates/env_list.html)
@@ -433,7 +434,7 @@ class TestSuite(BaseTable):
         verbose_name = '用例集合'
         db_table = 'TestSuite'
 
-    belong_project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    belong_project = models.ForeignKey(Project, on_delete=models.CASCADE)
     suite_name = models.CharField(max_length=100, null=False)
     include = models.TextField(null=False)
 ```
@@ -752,7 +753,7 @@ pip install celery -i https://pypi.douban.com/simple/
 ```
 from celery import Celery
 
-app = Celery('tasks', broker='redis://192.168.1.5:6379/0')
+app = Celery('tasks', broker='redis://192.168.1.111:6379/0')
 
 @app.task
 def add(x, y):

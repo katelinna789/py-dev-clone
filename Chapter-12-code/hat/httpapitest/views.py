@@ -166,22 +166,13 @@ def module_add(request):
 @csrf_exempt
 def module_list(request):
     if request.method == 'GET':
-        info = {'belong_project': 'All', 'belong_module': "请选择"}
-        projects = Project.objects.all().order_by("-update_time")
-        env = Env.objects.all()
-        rs = Module.objects.all().order_by("-update_time")
-        paginator = Paginator(rs,5)
-        page = request.GET.get('page')
-        objects = paginator.get_page(page)
-        context_dict = {'module': objects, 'projects': projects, 'info': info , 'env': env}
-        return render(request,"module_list.html",context_dict)
-    if request.method == 'POST':
         
         projects = Project.objects.all().order_by("-update_time")
-        project = request.POST.get("project")
-        module = request.POST.get("module")
-        user = request.POST.get("user")
+        project = request.GET.get("project", "All")
+        module = request.GET.get("module", "请选择")
+        user = request.GET.get("user", '')
         
+
         if project == "All":
             if user:
                 rs = Module.objects.filter(test_user=user).order_by("-update_time")
@@ -201,11 +192,12 @@ def module_list(request):
                     rs = Module.objects.filter(belong_project=p, test_user=user).order_by("-update_time")
                 else:
                     rs = Module.objects.filter(belong_project=p).order_by("-update_time")
-    paginator = Paginator(rs,5)
-    page = request.GET.get('page')
-    objects = paginator.get_page(page)
-    context_dict = {'module': objects, 'projects': projects, 'info': {'belong_project': project,'belong_module': module, 'user':user}}
-    return render(request,"module_list.html",context_dict)
+        info = {'belong_project': project,'belong_module': module, 'user':user}
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'module': objects, 'projects': projects, 'info': info }
+        return render(request,"module_list.html",context_dict)
 
 @csrf_exempt
 def module_edit(request):
@@ -222,7 +214,8 @@ def module_edit(request):
             msg = '测试人员不能为空'
             return HttpResponse(msg)
         p = Project.objects.get(project_name=module.get('belong_project'))
-        if Module.objects.filter(module_name=module.get('module_name'), belong_project=p):
+        if module.get('module_name') != Module.objects.get(id=module.get('index')).module_name and \
+            Module.objects.filter(module_name=module.get('module_name'), belong_project=p).count()>0:
             msg = "模块已经存在"
             return HttpResponse(msg)
         else:
@@ -310,20 +303,11 @@ def config_add(request):
 @csrf_exempt
 def config_list(request):
     if request.method == 'GET':
-        info = {'belong_project': 'All', 'belong_module': "请选择"}
         projects = Project.objects.all().order_by("-update_time")
-        rs = TestConfig.objects.all().order_by("-update_time")
-        paginator = Paginator(rs,5)
-        page = request.GET.get('page')
-        objects = paginator.get_page(page)
-        context_dict = {'config': objects, 'projects': projects, 'info': info}
-        return render(request,"config_list.html",context_dict)
-    if request.method == 'POST':
-        projects = Project.objects.all().order_by("-update_time")
-        project = request.POST.get("project")
-        module = request.POST.get("module")
-        name = request.POST.get("name")
-        user = request.POST.get("user")
+        project = request.GET.get("project", "All")
+        module = request.GET.get("module", "请选择")
+        name = request.GET.get("name",'')
+        user = request.GET.get("user",'')
         
         if project == "All":
             if name:
@@ -351,12 +335,12 @@ def config_list(request):
                     rs = TestConfig.objects.filter(belong_project=project, author=user).order_by("-update_time")
                 else:
                     rs = TestConfig.objects.filter(belong_project=project).order_by("-update_time")
-                
-    paginator = Paginator(rs,5)
-    page = request.GET.get('page')
-    objects = paginator.get_page(page)
-    context_dict = {'config': objects, 'projects': projects, 'info': {'belong_project': project,'belong_module': module, 'user':user}}
-    return render(request,"config_list.html",context_dict)
+        info = {'belong_project': project, 'belong_module': module, 'name': name, 'user':user}               
+        paginator = Paginator(rs,5)
+        page = request.GET.get('page')
+        objects = paginator.get_page(page)
+        context_dict = {'config': objects, 'projects': projects, 'info': info}
+        return render(request,"config_list.html",context_dict)
 
 
 

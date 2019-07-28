@@ -59,7 +59,7 @@
         </div>
 
         <div class="am-btn-toolbars am-btn-toolbar am-kg am-cf">
-            <form id="pro_filter" method="post" action="{% url 'config_list' %}">
+            <form id="pro_filter" >
                 <ul>
                     <li style="padding-top: 5px">
                         <select name="project" class="am-input-zm am-input-xm"
@@ -160,18 +160,20 @@
             </div>
 
             <ul class="am-pagination am-fr">
-                <span class="step-links">
+            
+                               <span class="step-links">
                                 {% if config.has_previous %}
                                    
-                                    <a href="?page={{ config.previous_page_number }}">上一页</a>
+                                    <a href="#" id='prepage' onclick="previous()">上一页</a>
                                 {% endif %}
                         
                                 <span class="current">
                                      {{ config.number }}/{{ config.paginator.num_pages }} 页.
                                 </span>
                         
-                                {% if module.has_next %}
-                                    <a href="?page={{ config.next_page_number }}">下一页</a>
+                                {% if config.has_next %}
+                                
+                                   <a href="#" id='nextpage' onclick="next()"> 下一页</a>
                                     
                                 {% endif %}
                             </span>
@@ -211,9 +213,25 @@
             var isChecked = $(this).prop("checked");
             $("input[name^='config']").prop("checked", isChecked);
         });
+        {% if config.has_next %}
+        function next(){
+           var params = $("#pro_filter").serialize() + "&page={{ config.next_page_number }}";
+           url = "{% url 'config_list' %}" + "?" + params
+           $("#nextpage").attr('href',url); 
+        }
+        {% endif %}
+        {% if config.has_previous%}
+        function previous(){
+            var params = $("#pro_filter").serialize() + "&page={{ config.previous_page_number }}";
+           url = "{% url 'config_list' %}" + "?" + params
+           $("#prepage").attr('href',url); 
+        }
+        {% endif %}
 
-        /*$().ready(function () {
+       /* $().ready(function () {
             auto_load('#pro_filter', '{% url 'module_search_ajax' %}', '#module', 'module');
+            $('#module').val({{ info.belong_module.id }})
         });*/
+        
     </script>
 {% endblock %}

@@ -50,7 +50,7 @@
                            style="font-weight: inherit; font-size: small ">选择项目:</label>
                     <div class="col-sm-8">
                         <select name="project" class="form-control"
-                                onchange="auto_load('#form_message', '/api/edit_case/', '#module', 'module')">
+                                onchange="auto_load('#form_message', '{%  url 'module_search_ajax' %}', '#module', 'module')">
                             <option value="{{ info.belong_project }}"
                                     selected>{{ info.belong_project }}</option>
                             {% for obj in project %}
@@ -166,7 +166,7 @@
                                         {% for foo in info.include|convert_eval %}
                                             {% if foo|data_type != 'list' %}
                                                 <li id="{{ foo.config.0 }}" name="pre_config">
-                                                    <a href="/api/edit_config/{{ foo.config.0 }}/"
+                                                    <a href="/httpapitest/case/edit/{{ foo.config.0 }}"
                                                        id="{{ foo.config.0 }}"
                                                        style="color:cadetblue">{{ foo.config.1 }}</a>
                                                     <i class="js-remove"
@@ -174,7 +174,7 @@
                                                 </li>
                                             {% else %}
                                                 <li id="{{ foo.0 }}">
-                                                    <a href="/api/edit_case/{{ foo.0 }}/"
+                                                    <a href="/httpapitest/case/edit/{{ foo.0 }}"
                                                        id="{{ foo.0 }}">{{ foo.1 }}</a>
                                                     <i class="js-remove" onclick=remove_self('#{{ foo.0 }}')>✖</i>
                                                 </li>
@@ -813,7 +813,7 @@
             if ($('#belong_case_id').val() !== '请选择') {
                 case_id = $('#belong_case_id').val();
                 case_name = $('#belong_case_id option:selected').text();
-                var href = "<li id=" + case_id + "><a href='/httpapitest/case/edit/" + case_id + "/' id = " + case_id + ">" + case_name + "" +
+                var href = "<li id=" + case_id + "><a href='/httpapitest/case/edit/" + case_id + "' id = " + case_id + ">" + case_name + "" +
                     "</a><i class=\"js-remove\" onclick=remove_self('#" + case_id + "')>✖</i></li>";
                 $("#pre_case").append(href);
             }
@@ -827,7 +827,7 @@
             if ($('#config').val() !== '请选择') {
                 var case_id = $('#config').val();
                 var case_name = $('#config option:selected').text();
-                var href = "<li id=" + case_id + " name='pre_config'><a style='color: cadetblue' href='/api/edit_config/" + case_id + "/' id = " + case_id + ">" + case_name + "" +
+                var href = "<li id=" + case_id + " name='pre_config'><a style='color: cadetblue' href='/httpapitest/config/edit/" + case_id + "' id = " + case_id + ">" + case_name + "" +
                     "</a><i class=\"js-remove\" onclick=remove_self('#" + case_id + "')>✖</i></li>";
                 $("li[name='pre_config']").remove();
                 $("#pre_case").prepend(href);
