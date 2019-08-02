@@ -1070,26 +1070,28 @@ class WebsiteUser(HttpLocust):
 ```
 
 ### 发起xml-rpc 请求
+locustxmlfile.py
+
 ```
 import time
-import xmlrpclib
+from xmlrpc import client
 
 from locust import Locust, TaskSet, events, task
 
 
-class XmlRpcClient(xmlrpclib.ServerProxy):
+class XmlRpcClient(client.ServerProxy):
     """
     Simple, sample XML RPC client implementation that wraps xmlrpclib.ServerProxy and 
     fires locust events on request_success and request_failure, so that all requests 
     gets tracked in locust's statistics.
     """
     def __getattr__(self, name):
-        func = xmlrpclib.ServerProxy.__getattr__(self, name)
+        func = client.ServerProxy.__getattr__(self, name)
         def wrapper(*args, **kwargs):
             start_time = time.time()
             try:
                 result = func(*args, **kwargs)
-            except xmlrpclib.Fault as e:
+            except Exception as e:
                 total_time = int((time.time() - start_time) * 1000)
                 events.request_failure.fire(request_type="xmlrpc", name=name, response_time=total_time, exception=e)
             else:
@@ -1113,7 +1115,7 @@ class XmlRpcLocust(Locust):
 
 class ApiUser(XmlRpcLocust):
     
-    host = "http://127.0.0.1:8877/"
+    host = "http://127.0.0.1:8877"
     min_wait = 100
     max_wait = 1000
     
@@ -1125,6 +1127,8 @@ class ApiUser(XmlRpcLocust):
         @task(5)
         def get_random_number(self):
             self.client.get_random_number(0, 100)
+
+
 ```
 
 服务端代码
@@ -1132,7 +1136,7 @@ class ApiUser(XmlRpcLocust):
 ```
 import random
 import time
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 
 
 def get_time():
@@ -1149,9 +1153,12 @@ server.register_function(get_time, "get_time")
 server.register_function(get_random_number, "get_random_number")
 server.serve_forever()
 ```
-### 例子
 
-官方例子
-```
-https://github.com/locustio/locust/tree/master/examples
-```
+启动被测服务段
+
+python server.py
+
+
+启动locust
+
+ locust -f ./locustxmlfile.py   --web-host="127.0.0.1" 
