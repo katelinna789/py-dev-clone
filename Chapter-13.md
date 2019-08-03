@@ -4,7 +4,7 @@
 
 
 1. 在modules.py 中添加 模型TestReports
-···
+```
 class TestReports(BaseTable):
     class Meta:
         verbose_name = "测试报告"
@@ -16,7 +16,7 @@ class TestReports(BaseTable):
     testsRun = models.IntegerField()
     successes = models.IntegerField()
     reports = models.TextField()
-···
+```
 
 2. 添加视图函数
 ```
@@ -864,6 +864,6 @@ def login_check(func):
     return wrapper
 ```
  5. 在所有视图函数上添加 `@login_check` login和register函数除外,因为这两个不需要登录
- 
+
 
 
