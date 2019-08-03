@@ -327,7 +327,7 @@ import os,shutil
 
 [utils.py](./Chapter-12-code/hat/httpapitest/utils.py)
 
-在httpapitest添加runer.py文件
+在httpapitest添加runner.py文件
 用例使用的是run_test_by_type,run_by_single，其它函数在批量运行时使用
 
 [runner.py](./Chapter-12-code/hat/httpapitest/runner.py)

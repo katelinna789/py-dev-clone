@@ -56,8 +56,8 @@
     <div class="nav-navicon admin-main admin-sidebar">
 
 
-        <div class="sideMenu am-icon-dashboard" style="color:#aeb2b7; margin: 10px 0 0 0;"> 欢迎您：xxx &nbsp;&nbsp;<a
-                href='#'>注 销</a></div>
+        <div class="sideMenu am-icon-dashboard" style="color:#aeb2b7; margin: 10px 0 0 0;"> 欢迎您：{{ request.session.now_account }} &nbsp;&nbsp;<a
+                href='{% url 'logout' %}'>注 销</a></div>
         <div class="sideMenu">
             <h3 class="am-icon-folder"><em></em> <a href="#">项目管理</a></h3>
             <ul>
@@ -85,7 +85,7 @@
             <h3 class="am-icon-soundcloud"><em></em> <a href="#">测试计划</a></h3>
             <ul>
                 <li><a href="{% url  'suite_list' %}">测 试 套 件</a></li>
-                <li><a href="#">定 时 任 务</a></li>
+                <li><a href="{% url 'task_list' %}">定 时 任 务</a></li>
             </ul>
 
 
@@ -105,50 +105,50 @@
         <ul>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location={% url 'index' %}">返回首页
+                        onclick="location='{% url 'index' %}'">返回首页
                     <a href="{% url 'index' %}" class="am-close am-close-spin">~</a></button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location={% url 'project_list' %}">项目列表<a
+                        onclick="location='{% url 'project_list' %}'">项目列表<a
                         href="{% url 'project_list' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="#'">模块列表<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'module_list' %}'">模块列表<a
+                        href="{% url 'module_list' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="#">用例列表<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'case_list' %}'">用例列表<a
+                        href="{% url 'case_list' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
 
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location=#">新增配置<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'config_add' %}'">新增配置<a
+                        href="{% url 'config_add' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location=#">新增用例<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'case_add' %}'">新增用例<a
+                        href="{% url 'case_add' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location=#">新增Suite<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'suite_add' %}'">新增Suite<a
+                        href="{% url 'suite_add' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
             <li>
                 <button type="button" class="am-btn am-btn-default am-radius am-btn-xs"
-                        onclick="location=#">新增任务<a
-                        href="#" class="am-close am-close-spin">~</a>
+                        onclick="location='{% url 'task_add' %}'">新增任务<a
+                        href="{% url 'task_add' %}" class="am-close am-close-spin">~</a>
                 </button>
             </li>
 

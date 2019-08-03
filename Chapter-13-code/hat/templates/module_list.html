@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}项目信息{% endblock %}
+{% block title %}模块信息{% endblock %}
 {% load staticfiles %}
 {% load custom_tags %}
 {% block content %}
@@ -13,25 +13,24 @@
                                style="font-weight: inherit; font-size: small " hidden>索引值：</label>
                         <div class="col-sm-9">
                             <input name="index" type="text" class="form-control" id="index"
-                                   placeholder="索引值" value="" hidden>
+                                   placeholder="索引值" hidden value="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="module_name"
+                               style="font-weight: inherit; font-size: small ">模块名称：</label>
+                        <div class="col-sm-9">
+                            <input name="module_name" type="text" class="form-control" id="module_name"
+                                   placeholder="模块名称" value="">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="control-label col-sm-3" for="project_name"
-                               style="font-weight: inherit; font-size: small ">项目名称：</label>
+                        <label class="control-label col-sm-3" for="belong_project"
+                               style="font-weight: inherit; font-size: small ">所属项目：</label>
                         <div class="col-sm-9">
-                            <input name="project_name" type="text" class="form-control" id="project_name"
-                                   placeholder="项目名称" value="" readonly>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label col-sm-3" for="responsible_name"
-                               style="font-weight: inherit; font-size: small ">负责人：</label>
-                        <div class="col-sm-9">
-                            <input name="responsible_name" type="text" id="responsible_name" class="form-control"
-                                   placeholder="负责人" value="">
+                            <input name="belong_project" type="text" id="belong_project" class="form-control"
+                                   placeholder="所属项目" readonly>
                         </div>
                     </div>
 
@@ -41,24 +40,6 @@
                         <div class="col-sm-9">
                             <input name="test_user" type="text" id="test_user" class="form-control"
                                    placeholder="测试人员" value="">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label col-sm-3" for="dev_user"
-                               style="font-weight: inherit; font-size: small ">开发人员：</label>
-                        <div class="col-sm-9">
-                            <input name="dev_user" type="text" id="dev_user" class="form-control"
-                                   placeholder="开发人员" value="">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label col-sm-3" for="publish_app"
-                               style="font-weight: inherit; font-size: small ">发布应用：</label>
-                        <div class="col-sm-9">
-                            <input name="publish_app" type="text" id="publish_app" class="form-control"
-                                   placeholder="发布应用" value="">
                         </div>
                     </div>
 
@@ -88,23 +69,22 @@
             </div>
         </div>
     </div>
-
-    <div class="am-modal am-modal-confirm" tabindex="-1" id="my-invalid">
+        <div class="am-modal am-modal-confirm" tabindex="-1" id="my-invalid">
         <div class="am-modal-dialog">
             <div class="am-modal-hd">HAT</div>
             <div class="am-modal-bd">
-                亲，此操作会强制删除该项目下所有模块和用例，请谨慎操作！！！
+                亲，此操作会删除该模块下所有用例和配置，请谨慎操作！！！
             </div>
             <div class="am-modal-footer">
                 <span class="am-modal-btn" data-am-modal-cancel>取消</span>
                 <span class="am-modal-btn" data-am-modal-confirm>确定</span>
             </div>
         </div>
-    </div>   
+    </div>
 
     <div class="am-modal am-modal-confirm" tabindex="-1" id="select_env">
         <div class="am-modal-dialog">
-            <div class="am-modal-hd">HttpRunnerManager</div>
+            <div class="am-modal-hd">HAT</div>
             <form class="form-horizontal">
                 <div class="form-group">
                     <label class="control-label col-sm-3"
@@ -139,6 +119,8 @@
                     </div>
                 </div>
             </form>
+            </form>
+
             <div class="am-modal-footer">
                 <span class="am-modal-btn" data-am-modal-cancel>取消</span>
                 <span class="am-modal-btn" data-am-modal-confirm>确定</span>
@@ -147,21 +129,18 @@
     </div>
 
 
-
     <div class="admin-biaogelist">
         <div class="listbiaoti am-cf">
-            <ul class="am-icon-flag on"> 项目列表</ul>
-            <dl class="am-icon-home" style="float: right;"> 当前位置： 项目管理 > 项目列表</a></dl>
+            <ul class="am-icon-flag on"> 模块列表</ul>
+            <dl class="am-icon-home" style="float: right;"> 当前位置： 模块管理 > <a href="#">模块展示</a></dl>
             <dl>
                 <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-plus"
-                        onclick="location='{% url 'project_add' %}'">新增项目
-                </button>
-                <button type="button" class="am-btn am-btn-primary am-round am-btn-xs am-icon-plus">批量导入
+                        onclick="location='{% url 'module_add' %}'">新增模块
                 </button>
                 <button type="button" class="am-btn am-btn-danger am-round am-btn-xs am-icon-bug"
-                onclick="run_test('batch', '{% url 'test_batch_run' %}', 'project')"
-                >运行
+                         onclick="run_test('batch','{% url 'test_batch_run' %}', 'module')">运行
                 </button>
+
             </dl>
         </div>
 
@@ -169,11 +148,12 @@
             <form id="pro_filter">
                 <ul>
                     <li style="padding-top: 5px">
-                        <select name="project" id="projectselect" class="am-input-zm am-input-xm">
+                        <select name="project" class="am-input-zm am-input-xm"
+                                onchange="auto_load('#pro_filter', '{% url 'module_search_ajax' %}', '#module', 'module')">
                             <option value="{{ info.belong_project }}"
                                     selected>{{ info.belong_project }}</option>
 
-                            {% for foo in all_projects %}
+                            {% for foo in projects %}
                                 {% ifnotequal info.belong_project foo.project_name %}
                                     <option value="{{ foo.project_name }}">{{ foo.project_name }}</option>
                                 {% endifnotequal %}
@@ -184,52 +164,56 @@
                             {% endif %}
                         </select>
                     </li>
-                    
-                    <li style="padding-top: 5px"><input value="{{ info.user }}"  type="text" name="user"
-                                                        class="am-input-sm am-input-xm"
-                                                        placeholder="负责人"/></li>
 
+                    <li style="padding-top: 5px">
+                        <select name="module" class=" am-input-zm am-input-xm" id="module">
+                            {% if info.belong_module == "请选择" %}
+                            <option selected value="{{ info.belong_module }}">{{ info.belong_module }}</option>
+                            {% else %}
+                            <option selected value="{{ info.belong_module.id }}">{{ info.belong_module.module_name }}</option>
+                            {% endif %}
+                        </select>
+                    </li>
+                    <li style="padding-top: 5px"><input value="{{ info.user }}" type="text" name="user"
+                                                        class="am-input-sm am-input-xm"
+                                                        placeholder="测试人员"/></li>
                     <li>
                         <button style="padding-top: 5px; margin-top: 9px"
                                 class="am-btn am-radius am-btn-xs am-btn-success">搜索
                         </button>
                     </li>
-                </form
+                </ul>
             </form>
         </div>
-        <form class="am-form am-g" id="project_list" name="project_list">
+
+
+        <form class="am-form am-g" id='module_list' name="module_list" >
             <table width="100%" class="am-table am-table-bordered am-table-radius am-table-striped">
                 <thead>
                 <tr class="am-success">
                     <th class="table-check"><input type="checkbox" id="select_all"/></th>
                     <th class="table-title">序号</th>
-                    <th class="table-type">项目名称</th>
-                    <th class="table-type">负责人</th>
-                    <th class="table-title">发布应用</th>
-                    <th class="table-title">测试人员</th>
-                    <th class="table-title">模块/Suite/用例/配置</th>
-                    <th class="table-date am-hide-sm-only">创建时间</th>
+                    <th class="table-type">模块名称</th>
+                    <th class="table-type">测试人员</th>
+                    <th class="table-type">所属项目</th>
+                    <th class="table-type">用例/配置</th>
+                    <th class="table-date am-hide-sm-only">创建日期</th>
                     <th width="163px" class="table-set">操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for foo in project %}
+
+                {% for foo in module %}
                     <tr>
-                        <td><input type="checkbox" name="project_{{ foo.id }}" value="{{ foo.id }}"/></td>
+                        <td><input type="checkbox" name="module_{{ foo.id }}" value="{{ foo.id }}"/></td>
                         <td>{{ forloop.counter }}</td>
                         <td><a href="#"
-                               onclick="edit('{{ foo.id }}','{{ foo.project_name }}', '{{ foo.responsible_name }}'
-                                       , '{{ foo.test_user }}','{{ foo.dev_user }}', '{{ foo.publish_app }}'
-                                       , '{{ foo.simple_desc }}', '{{ foo.other_desc }}')">{{ foo.project_name }}</a>
+                               onclick="edit('{{ foo.id }}','{{ foo.module_name }}', '{{ foo.belong_project.project_name }}'
+                                       , '{{ foo.test_user }}', '{{ foo.simple_desc }}', '{{ foo.other_desc }}')">{{ foo.module_name }}</a>
                         </td>
-                        <td>{{ foo.responsible_name }}</td>
-                        <td>{{ foo.publish_app }}</td>
                         <td>{{ foo.test_user }}</td>
-
-                        
-                        <td>{{ foo.project_name | project_sum }}</td>
-                           
-
+                        <td>{{ foo.belong_project.project_name }}</td>
+                        <td>{{ foo.id | module_sum }}</td> 
                         <td class="am-hide-sm-only">{{ foo.create_time }}</td>
                         <td>
                             <div class="am-btn-toolbar">
@@ -237,23 +221,23 @@
                                     <button type="button"
                                             class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
                                             data-am-popover="{content: '运行', trigger: 'hover focus'}"
-                                            onclick="run_test('{{ foo.id }}', '{% url 'test_run' %}', 'project')"
+                                            onclick="run_test('{{ foo.id }}','{% url 'test_run' %}','module')"
                                             >
-                                        <span class="am-icon-bug"></span></button>
+                                        <span class="am-icon-bug"></span>
+                                    </button>
                                     <button type="button"
                                             class="am-btn am-btn-default am-btn-xs am-text-secondary am-round"
                                             data-am-popover="{content: '编辑', trigger: 'hover focus'}"
-                                            onclick="edit('{{ foo.id }}','{{ foo.project_name }}', '{{ foo.responsible_name }}'
-                                                    , '{{ foo.test_user }}','{{ foo.dev_user }}', '{{ foo.publish_app }}'
-                                                    , '{{ foo.simple_desc }}', '{{ foo.other_desc }}')"
-                                            > <span
-                                            class="am-icon-pencil-square-o"></span></button>
+                                            onclick="edit('{{ foo.id }}','{{ foo.module_name }}', '{{ foo.belong_project.project_name }}'
+                                                    , '{{ foo.test_user }}', '{{ foo.simple_desc }}', '{{ foo.other_desc }}')">
+                                            <span class="am-icon-pencil-square-o"></span>
+                                    </button>
                                     <button type="button"
                                             class="am-btn am-btn-default am-btn-xs am-text-danger am-round"
                                             data-am-popover="{content: '删除', trigger: 'hover focus'}"
-                                            onclick="invalid('{{ foo.id }}')"
-                                           ><span
-                                            class="am-icon-trash-o"></span></button>
+                                            onclick="invalid('{{ foo.id }}')">
+                                            <span class="am-icon-trash-o"></span>
+                                    </button>
                                 </div>
                             </div>
                         </td>
@@ -265,73 +249,74 @@
             </table>
 
             <div class="am-btn-group am-btn-group-xs">
-                <button type="button" class="am-btn am-btn-default" onclick="location='{% url 'project_add'%}'"><span
+                <button type="button" class="am-btn am-btn-default" onclick="location='{% url 'module_add' %}'"><span
                         class="am-icon-plus"></span> 新增
                 </button>
             </div>
 
             <ul class="am-pagination am-fr">
-                 <span class="step-links">
-                                {% if project.has_previous %}
+                            <span class="step-links">
+                                {% if module.has_previous %}
                                    
-                                    <a href="#" id='prepage' onclick="previous()">上一页</a>
+                                    <a href="?page={{ module.previous_page_number }}">上一页</a>
                                 {% endif %}
                         
                                 <span class="current">
-                                     {{ project.number }}/{{ project.paginator.num_pages }} 页.
+                                     {{ module.number }}/{{ module.paginator.num_pages }} 页.
                                 </span>
                         
-                                {% if project.has_next %}
-                                
-                                   <a href="#" id='nextpage' onclick="next()"> 下一页</a>
+                                {% if module.has_next %}
+                                    <a href="?page={{ module.next_page_number }}">下一页</a>
                                     
                                 {% endif %}
                             </span>
             </ul>
+
+
             <hr/>
+
         </form>
     </div>
     <script type="text/javascript">
-        function edit(id, pro_name, responsible_name, test_user, dev_user, publish_app, simple_desc, other_desc) {
+       function edit(id, module_name, belong_project, test_user, simple_desc, other_desc) {
             $('#index').val(id);
-            $('#project_name').val(pro_name);
-            $('#responsible_name').val(responsible_name);
+            $('#module_name').val(module_name);
+            $('#belong_project').val(belong_project);
             $('#test_user').val(test_user);
-            $('#dev_user').val(dev_user);
-            $('#publish_app').val(publish_app);
             $('#simple_desc').val(simple_desc);
             $('#other_desc').val(other_desc);
             $('#my-edit').modal({
                 relatedTarget: this,
                 onConfirm: function () {
-                    update_data_ajax('#edit_form', '{% url 'project_edit' %}')
+                    update_data_ajax('#edit_form', '{% url 'module_edit' %}')
                 },
                 onCancel: function () {
                 }
             });
         }
-        function invalid(id) {
+
+        function invalid(name) {
             $('#my-invalid').modal({
                 relatedTarget: this,
                 onConfirm: function () {
-                    del_data_ajax(id, '{% url 'project_delete' %}')
+                    del_data_ajax(name, '{% url 'module_delete' %}')
                 },
                 onCancel: function () {
                 }
             });
         }
         $('#mode').change(function () {
-            if ($('#mode').val() === 'false') {
+            if ($('#mode').val() == 'false') {
                 $('#report_name').removeAttr("readonly");
             } else {
                 $('#report_name').attr('readonly', 'readonly');
             }
         });
 
-        function run_test(mode, url, type) {
+        function run_test(mode,url, type) {
             if (mode === 'batch') {
                 if ($("input:checked").size() === 0) {
-                    myAlert("请至少选择一个项目运行！");
+                    myAlert("请至少选择一个模块运行！");
                     return;
                 }
             }
@@ -339,7 +324,7 @@
                 relatedTarget: this,
                 onConfirm: function () {
                     var data = {
-                        "id": $("#project_list").serializeJSON(),
+                        "id": $("#module_list").serializeJSON(),
                         "env_name": $('#env_name').val(),
                         "type": type,
                         'report_name': $('#report_name').val()
@@ -353,9 +338,9 @@
                             var obj = JSON.parse(json2map);
                             obj['env_name'] = data['env_name'];
                             obj['type'] = data['type'];
-                            post('/httpapitest/test/test_batch_run', obj);
+                            post('{% url 'test_batch_run' %}', obj);
                         } else {
-                            post('/httpapitest/test/test_run', data);
+                            post('{% url 'test_run' %}', data);
                         }
                     } else {
                         $.ajax({
@@ -379,25 +364,8 @@
 
         $('#select_all').click(function () {
             var isChecked = $(this).prop("checked");
-            $("input[name^='project']").prop("checked", isChecked);
+            $("input[name^='module']").prop("checked", isChecked);
         })
-
-
-
-        {% if project.has_next %}
-        function next(){
-           var params = $("#pro_filter").serialize() + "&page={{ project.next_page_number }}";
-           url = "{% url 'project_list' %}" + "?" + params
-           $("#nextpage").attr('href',url); 
-        }
-        {% endif %}
-        {% if project.has_previous%}
-        function previous(){
-            var params = $("#pro_filter").serialize() + "&page={{ project.previous_page_number }}";
-           url = "{% url 'project_list' %}" + "?" + params
-           $("#prepage").attr('href',url); 
-        }
-        {% endif %}
     </script>
 
 {% endblock %}
