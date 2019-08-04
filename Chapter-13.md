@@ -29,6 +29,15 @@ def report_list(request):
         context_dict = {'report': objects }
         return render(request,"report_list.html",context_dict)
 
+@csrf_exempt
+def report_delete(request):
+    if request.is_ajax():
+        data = json.loads(request.body.decode('utf-8'))
+        report_id = data.get('id')
+        report = TestReports.objects.get(id=report_id)
+        report.delete()
+        return HttpResponse(reverse('report_list'))
+
 def report_view(request, id):
     """
     查看报告
