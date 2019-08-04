@@ -176,6 +176,8 @@ INSTALLED_APPS = [
 ]
 ```
 
+需要执行下数据迁移，django_celery_beat 包含数据表
+
 2. 添加视图
 
 ```
