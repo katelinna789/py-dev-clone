@@ -237,6 +237,22 @@ def task_set(request):
         task.enabled = mode
         task.save()
         return HttpResponse(reverse('task_list'))
+
+@csrf_exempt
+def suite_search_ajax(request):
+    if request.is_ajax():
+        data = json.loads(request.body.decode('utf-8'))
+        if 'crontab' in data.keys():
+            project = data["crontab"]["name"]["project"]
+            
+        if   project != "请选择":
+            p = Project.objects.get(project_name=project)
+            suites = TestSuite.objects.filter(belong_project=p)
+            suite_list = ['%d^=%s' % (c.id, c.suite_name) for c in suites ]
+            suite_string = 'replaceFlag'.join(suite_list)
+            return HttpResponse(suite_string)
+        else:
+            return HttpResponse('')
 ```
 
 veiws.py 新增导入
