@@ -42,7 +42,7 @@ def report_view(request, id):
 views.py 新增导入
 ```
 from httpapitest.models import TestReports
-from django_celery_beat.models import PeriodicTask
+from django.utils.safestring import mark_safe
 ```
 
 3. 添加report_list.html模板
