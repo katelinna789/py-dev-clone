@@ -67,10 +67,9 @@ path('report/list', views.report_list, name='report_list'),
 
 [tasks.py](./Chapter-12-code/hat/httpapitest/tasks.py)
 
-2. 在settings.py 所在目录添加cerlery.py 文件
-[celery.py](./Chapter-12-code/hat/hat/celery.py)
 
-3. 修改settings.py 添加celery相关配置
+
+2. 修改settings.py 添加celery相关配置
 [settings.py](./Chapter-12-code/hat/hat/settings.py)
 ```
 CELERY_BROKER_URL = 'redis://192.168.1.111:6379/0'
@@ -123,7 +122,7 @@ def add_test_reports(summary, report_name=None):
     return report_path
 ```
 
-5. 在httpapitest目录中新增celery.py 文件
+5. 在hat目录中新增celery.py 文件
 
 [celery.py](./Chapter-13-code/hat/hat/celery.py)
 
