@@ -280,10 +280,23 @@ RUN apt-get update \
 
 WORKDIR /opt/hat
 COPY requirements.txt ./
+COPY sources.list  /etc/apt/sources.list
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple/
 COPY . .
 COPY default  /etc/nginx/sites-enabled
 CMD sh start.sh
+EOF
+
+cat << EOF>sources.list
+deb http://mirrors.aliyun.com/debian/ stretch main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ stretch main non-free contrib
+deb http://mirrors.aliyun.com/debian-security stretch/updates main
+deb-src http://mirrors.aliyun.com/debian-security stretch/updates main
+deb http://mirrors.aliyun.com/debian/ stretch-updates main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ stretch-updates main non-free contrib
+deb http://mirrors.aliyun.com/debian/ stretch-backports main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ stretch-backports main non-free contrib
+
 EOF
 
 cat << EOF>start.sh
