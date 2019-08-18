@@ -94,12 +94,12 @@ by running conda init? [yes|no]
 ### 配置虚拟环境
 
 ```
-cd /opt/anaconda/bin
+cd /opt/anaconda3/bin
 
 ./pip install virtualenv -i https://pypi.douban.com/simple/
 
 cd /opt
-/opt/anaconda/bin/virtualenv env
+/opt/anaconda3/bin/virtualenv env
 
 
 source env/bin/activate
@@ -118,6 +118,8 @@ django-celery-beat==1.5.0
 mysqlclient==1.4.2.post1
 PyYAML==5.1
 HttpRunner==2.2.2
+gunicorn
+redis
 EOF
 ```
 ### 安装依赖模块
@@ -144,10 +146,6 @@ quit
 初始化书库表
 
 `python manage.py  migrate`
-
-导入数据
-```
-```
 
 ### 启动django应用
 
@@ -198,6 +196,7 @@ systemctl start nginx
 vi /etc/nginx/conf.d/default.conf
 
 ```
+cat << EOF>/etc/nginx/conf.d/default.conf
 server {
     listen       80;
     server_name  localhost;
@@ -221,7 +220,7 @@ server {
         root   /usr/share/nginx/html;
     }
 }
-
+EOF
 ```
 
 
@@ -250,6 +249,7 @@ cat << EOF> /etc/docker/daemon.json
     "max-file": "3"
   }
 }
+EOF
 
 ```
 
@@ -280,9 +280,9 @@ RUN apt-get update \
 
 WORKDIR /opt/hat
 COPY requirements.txt ./
-COPY default.conf  /etc/nginx/conf.d
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple/
 COPY . .
+COPY default  /etc/nginx/sites-enabled
 CMD sh start.sh
 EOF
 
@@ -293,7 +293,7 @@ nohup celery -A  hat  beat  --loglevel=info >logs/celery_beat.log 2>&1 &
 nginx -g 'daemon off;'
 EOF
 
-cat << EOF> default.conf
+cat << EOF> default
 server {
     listen       80 default_server;
     server_name  _;
