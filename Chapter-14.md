@@ -1,361 +1,389 @@
 # 第14天
 
-## 更新httpapi接口功能
-httpapi添加断言字段
+## 线上环境部署
 
-### 添加models 字段
+### 操作系统
+centos 7
 
+### 更换默认的yum源为阿里云
+centos7
 ```
-ASSERT_TYPE_CHOICE = (
-    ('noselect','无'),
-    ('in', '包含'),
-    ('status_code', '状态码')
-
-)
-
-class HttpApi(models.Model):
-    """
-    接口信息
-    """
-    ......
-    assertType = models.CharField(max_length=20,  verbose_name="断言类型", default="noselect",choices=ASSERT_TYPE_CHOICE)
-    assertContent = models.CharField(max_length=1024, verbose_name="断言内容", blank=True, null=True)
-
-    def __str__(self):
-        return self.name
+cd /etc/yum.repos.d/
+rm -f ./*.repo
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+yum clean all
 ```
 
-### 更新httpapi表单内容
-templates/project/httpapi_form.html
+cetos6
 ```
-<div class="form-group">
-    <label for="httpapi_asserttype">断言类型</label>
-
-    <select class="form-control" name="httpapi_asserttype" id="httpapi_asserttype">
-        <option vaule="noselect">无</option>
-        <option value="in">包含</option>
-        <option value="status_code">状态码</option>
-    </select>
-</div>
-<div class="form-group">
-    
-    <label for="httpapi_assertcontent">断言内容</label>
-    {% if object %}
-    <textarea class="form-control" name="httpapi_assertcontent" id="httpapi_assertcontent" rows="5">{{ object.assertContent }}</textarea>
-    {% else %}
-    <textarea class="form-control" name="httpapi_assertcontent" id="httpapi_assertcontent" rows="5"></textarea>
-    {% endif %}
-</div>
+cd /etc/yum.repos.d/
+rm -f ./*.repo
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-6.repo
+yum clean all
 ```
 
-###  更新view视图
+### 部署代码
+将代码传送到linux环境下的
+
+安装一个ssh 工具用来远程登录linux
+
+在linux中安装lrzsz `yum install lrzsz`
+
+执行rz 命令上传代码
+
+
+### 安装mysql
+centos7
 ```
-@login_required
-def httpapi_create(request, pk):
-    ......
-        httpapi_assertType = request.POST.get("httpapi_asserttype")
-        httpapi_assertContent = request.POST.get("httpapi_assertcontent")
-        userupdate= request.user
-
-        .......
-                          assertType=httpapi_assertType,
-                          assertContent=httpapi_assertContent
-                          )
-        httpapi.save()
-
-        #return HttpResponse("ok")
-        return redirect("httpapi_list",httpapi_project.id)
-
-
-@login_required
-def httpapi_edit(request, project_id, httpapi_id):
-   .....
-        
-        httpapi.assertType = request.POST.get("httpapi_asserttype")
-        httpapi.assertContent = request.POST.get("httpapi_assertcontent")
-        httpapi.userUpdate= request.user
-        httpapi.save()
-        return redirect("httpapi_list",project.id)
+yum install mariadb mariadb-devel mariadb-server
+#启动mysql-server
+systemctl start mariadb
+```
+centos6
+```
+yum install mysql
+yum install mysql-devel
+# 启动
+/etc/init.d/mysqld start
 ```
 
+### anacoda 
+一个python的发行版可快速在linux系统中配置python环境
+https://repo.anaconda.com/archive/
 
-## 运行功能
+安装anacod
+```
+sh ./Anaconda3-2019.07-Linux-x86_64.sh
 
-运行httpapi接口
+Welcome to Anaconda3 2019.07
 
-### 定义models 
+In order to continue the installation process, please review the license
+agreement.
+Please, press ENTER to continue
+
+>>>
+
+输入回车
+
+Do you accept the license terms? [yes|no]
+
+输入yes
+Anaconda3 will now be installed into this location:
+/root/anaconda3
+
+  - Press ENTER to confirm the location
+  - Press CTRL-C to abort the installation
+  - Or specify a different location below
+
+[/root/anaconda3] >>>
+
+输入/opt/anaconda3
+回车
+
+[/root/anaconda3] >>> /opt/anaconda3
+PREFIX=/opt/anaconda3
+Unpacking payload ...
+
+installation finished.
+Do you wish the installer to initialize Anaconda3
+by running conda init? [yes|no]
+[no] >>> no
 
 ```
-class HttpRunResult(models.Model):
-    """
-    接口测试结果
-    """
-    httpapi = models.ForeignKey(HttpApi, on_delete=models.CASCADE, verbose_name="所属接口")
-    response = models.TextField(verbose_name="响应结果")
-    header = models.TextField(verbose_name="响应header")
-    statusCode = models.IntegerField(verbose_name="状态码")
-    assertResult = models.CharField(max_length=20, null=True, verbose_name="断言结果")
-```
-执行命令应用的数据库
 
-### 将HttpRunResult 注册到django admin
-```
-from django.contrib import admin
-from .models import Project,HttpApi,HttpRunResult
-
-# Register your models here.
-
-admin.site.register(Project)
-admin.site.register(HttpApi)
-admin.site.register(HttpRunResult)
-```
-
-### 设置url 
-```
-from django.urls import path
-from . import views
-
-urlpatterns = [
-    path('', views.index, name='index'),
-    path('login/',views.user_login, name='user_login'),
-    path('logout/',views.user_logout, name='user_logout'),
-    path('project/',views.ProjectListView.as_view(), name='project_list'),
-    path('project/<int:pk>', views.ProjectDetailView.as_view(), name='project_detail'),
-    path('project/<int:pk>/edit', views.project_edit, name='project_edit'),
-    path('project/create', views.project_create, name='project_create'),
-    path('project/<int:pk>/httpapi/create', views.httpapi_create, name='httpapi_create'),
-    path('project/<int:pk>/httpapi/', views.httpapi_list, name='httpapi_list'),
-    path('project/<int:project_id>/httpapi/<int:httpapi_id>/edit', views.httpapi_edit, name='httpapi_edit'),
-    path('project/<int:project_id>/httpapi/<int:httpapi_id>/run', views.httpapi_run, name='httpapi_run')
-]
-```
-
-### 更新httpapi_list.html
-```
-<a class="playitbtn tryitbtnsyntax" href={% url "httpapi_edit" project.id object.id %}>编辑</a>
-<a class="playitbtn tryitbtnsyntax" href={% url "httpapi_run" project.id object.id %}>运行</a>
-```
-
-
-### httpapi_run 视图
-添加get测试
-```
-@login_required
-def httpapi_run(request, project_id, httpapi_id):
-    if request.method == "GET":
-        project = Project.objects.get(id=project_id)
-        httpapi = HttpApi.objects.get(project=project, id=httpapi_id)
-        response_header = ""
-        assertresult = ""
-        if httpapi.requestType == "GET":
-            data = {}
-            if httpapi.requestBody != "":
-                for line in httpapi.requestBody.strip().split("\n"):
-                    key,value = line.split("=")
-                    data[key] = value
-                    
-            r = requests.get(url=httpapi.apiurl,params=data)
-            for item in r.headers:
-                response_header += "%s: %s\n" % (item, r.headers.get(item))
-            if httpapi.assertType == "noselect":
-                assertresult = ""
-            elif httpapi.assertType == "in":
-                if httpai.assertContent.strip() in r.text:
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-            elif httpapi.assertType == "status_code":
-                if httpapi.assertContent.strip() == str(r.status_code):
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-        httprunresult = HttpRunResult(httpapi=httpapi, 
-                                      response=r.text, 
-                                      header=response_header, 
-                                      statusCode = r.status_code,
-                                      assertResult = assertresult
-                                      )
-        httprunresult.save()
-        return HttpResponse("result add ok")
-```
-完成后编辑httapi接口，点击运行
-### 模板httpapi_result.html
+### 配置虚拟环境
 
 ```
-{% extends "project/project_base.html" %} {% block project %}
-<p></p>
-<div class="row">
-    <div class="col-lg-12">
-        <div class="panel panel-default">
+cd /opt/anaconda/bin
 
-           
+./pip install virtualenv -i https://pypi.douban.com/simple/
 
-            <div class="panel-body">
-            {% if object %}
-
-                <ul class="nav nav-tabs">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#response" data-toggle="tab">响应内容</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#header" data-toggle="tab">响应Headers</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#status_code" data-toggle="tab">响应状态码</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#assert_result" data-toggle="tab">断言结果</a>
-                    </li>
-
-                </ul>
+cd /opt
+/opt/anaconda/bin/virtualenv env
 
 
-                <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="response" role="textarea">
-                        <textarea class="form-control" rows="10" readonly>{{ object.response }}</textarea>
-                    </div>
-                    <div class="tab-pane fade" id="header" role="tabpanel">
-                        <textarea class="form-control" rows="10" readonly>{{ object.header }}</textarea>
-                    </div>
-                    <div class="tab-pane fade" id="status_code" role="tabpanel">
-                        <textarea class="form-control" rows="10" readonly>{{ object.statusCode }}</textarea>
-                    </div>
-                    <div class="tab-pane fade" id="assert_result" role="tabpanel">
-                            <textarea class="form-control" rows="10" readonly>{{ object.assertResult }}</textarea>
-                        </div>
-
-                </div>
-            {% else %}
-            还未执行
-            {% endif %}
-
-            </div>
-            <!-- /.panel -->
-        </div>
-        <!-- /.col-lg-12 -->
-    </div>
-
-    {% endblock %}
+source env/bin/activate
+(env) [root@python-dev opt]#
 ```
 
-### httpapi_result  url
-```
-from django.urls import path
-from . import views
+### 查看项目依赖模块版本
+`pip freeze`
 
-urlpatterns = [
-    path('', views.index, name='index'),
-    path('login/',views.user_login, name='user_login'),
-    path('logout/',views.user_logout, name='user_logout'),
-    path('project/',views.ProjectListView.as_view(), name='project_list'),
-    path('project/<int:pk>', views.ProjectDetailView.as_view(), name='project_detail'),
-    path('project/<int:pk>/edit', views.project_edit, name='project_edit'),
-    path('project/create', views.project_create, name='project_create'),
-    path('project/<int:pk>/httpapi/create', views.httpapi_create, name='httpapi_create'),
-    path('project/<int:pk>/httpapi/', views.httpapi_list, name='httpapi_list'),
-    path('project/<int:project_id>/httpapi/<int:httpapi_id>/edit', views.httpapi_edit, name='httpapi_edit'),
-    path('project/<int:project_id>/httpapi/<int:httpapi_id>/run', views.httpapi_run, name='httpapi_run'),
-    path('project/<int:project_id>/httpapi/<int:httpapi_id>/result', views.httpapi_result, name='httpapi_result')
-]
+新建requirements.txt文件
 ```
-
-### httpapi_result view
+cat << EOF>requirements.txt
+Django==2.2.2
+celery==4.3.0
+django-celery-beat==1.5.0
+mysqlclient==1.4.2.post1
+PyYAML==5.1
+HttpRunner==2.2.2
+EOF
 ```
-@login_required
-def httpapi_result(request, project_id, httpapi_id):
-    project = Project.objects.get(id=project_id)
-    httpapi = HttpApi.objects.get(project=project, id=httpapi_id)
-    try:
-        httpresult = HttpRunResult.objects.filter(httpapi=httpapi).order_by("-id")[0]
-    except:
-        return render(request,"project/httpapi_result.html", {"project": project})
-
-    return render(request,"project/httpapi_result.html",{"project": project, "object": httpresult })
+### 安装依赖模块
 ```
-
-### 更新httpapi_list.html
-```
-<a class="playitbtn tryitbtnsyntax" href={% url "httpapi_edit" project.id object.id %}>编辑</a>
-<a class="playitbtn tryitbtnsyntax" href={% url "httpapi_run" project.id object.id %}>运行</a>
-<a class="playitbtn tryitbtnsyntax" href={% url "httpapi_result" project.id object.id %}>结果</a>
-```
-
-#### post 请求的测试 练习
-正确运行post 表单请求
+# 安装gcc
+yum install gcc
+mysqlclient 安装时需要gcc进行编译
+# 在env环境下进入代码目录
+cd /opt/hat
+# 安装依赖模块
+(env) [root@python-dev autotest]# pip install -r requirements.txt -i https://pypi.douban.com/simple/  
 
 ```
-@login_required
-def httpapi_run(request, project_id, httpapi_id):
-    if request.method == "GET":
-        project = Project.objects.get(id=project_id)
-        httpapi = HttpApi.objects.get(project=project, id=httpapi_id)
-        response_header = ""
-        assertresult = ""
-        if httpapi.requestType == "GET":
-            data = {}
-            if httpapi.requestBody != "":
-                for line in httpapi.requestBody.strip().split("\n"):
-                    key,value = line.split("=")
-                    data[key] = value
-                    
-            r = requests.get(url=httpapi.apiurl,params=data)
-            for item in r.headers:
-                response_header += "%s: %s\n" % (item, r.headers.get(item))
-            if httpapi.assertType == "noselect":
-                assertresult = ""
-            elif httpapi.assertType == "in":
-                if httpai.assertContent.strip() in r.text:
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-            elif httpapi.assertType == "status_code":
-                if httpapi.assertContent.strip() == str(r.status_code):
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-        if httpapi.requestType == "POST":
-            request_header = {}
-            if httpapi.requestHeader != "":
-                for line in httpapi.requestHeader.strip().split("\n"):
-                    key,value = line.split("=")
-                    request_header[key] = value
-            if httpapi.requestParameterType == "form-data":
-                request_body = {}
-                for line in httpapi.requestBody.strip().split("\n"):
-                    key,value = line.split("=")
-                    request_body[key] = value
-                r = requests.post(url=httpapi.apiurl,data=request_body,headers=request_header)
-            elif httpapi.requestParameterType == "raw":
-                request_body = httpapi.requestBody.strip()
-                print(request_body)
-                r = requests.post(url=httpapi.apiurl,data=request_body,headers=request_header)
-            for item in r.headers:
-                response_header += "%s: %s\n" % (item, r.headers.get(item))
-            if httpapi.assertType == "noselect":
-                assertresult = ""
-            elif httpapi.assertType == "in":
-                if httpai.assertContent.strip() in r.text:
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-            elif httpapi.assertType == "status_code":
-                if httpapi.assertContent.strip() == str(r.status_code):
-                    assertresult = "ok"
-                else:
-                    assertresult = "failed"
-                      
-        httprunresult = HttpRunResult(httpapi=httpapi, 
-                                      response=r.text, 
-                                      header=response_header, 
-                                      statusCode = r.status_code,
-                                      assertResult = assertresult
-                                      )
-        httprunresult.save()
-        #return HttpResponse("result add ok")
-        return redirect("httpapi_result",project.id, httpapi.id)
+### 初始化数据库
+```
+# 连接数据库
+mysql -uroot -p
+# 创建数据库
+create database hat /*!40100 DEFAULT CHARACTER SET utf8 */;
+# 退出数据库
+quit
 ```
 
-### 正确运行post raw请求
-比如json
+初始化书库表
+
+`python manage.py  migrate`
+
+导入数据
+```
+```
+
+### 启动django应用
+
+```
+(env) [root@python-dev hat]# nohup gunicorn hat.wsgi >logs/gunicorn.log 2>&1 &
+[1] 14207
+(env) [root@python-dev hat]# tail gunicorn.log
+nohup: ignoring input
+[2018-09-08 11:09:45 +0000] [14207] [INFO] Starting gunicorn 19.9.0
+[2018-09-08 11:09:45 +0000] [14207] [INFO] Listening at: http://127.0.0.1:8000 (14207)
+[2018-09-08 11:09:45 +0000] [14207] [INFO] Using worker: sync
+[2018-09-08 11:09:45 +0000] [14210] [INFO] Booting worker with pid: 14210
+```
+
+### 启动celery
+```
+nohup celery -A  hat  worker --loglevel=info >logs/celery.log 2>&1 &
+nohup celery -A  hat  beat  --loglevel=info >logs/celery_beat.log 2>&1 &
+```
+
+### 启动nginx前提
+关闭iptables
+```
+# centos7
+systemctl stop firewalld
+# centos6
+/etc/init.d/iptables stop
+
+```
+关闭selinux
+
+`setenforce 0`
+
+### 安装nginx
+
+
+
+
+# 安装命令
+
+```
+rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+yum install nginx
+systemctl start nginx
+```
+
+### 配置nginx
+vi /etc/nginx/conf.d/default.conf
+
+```
+server {
+    listen       80;
+    server_name  localhost;
+
+    charset utf-8;
+    access_log  /var/log/nginx/access.log  main;
+
+    location / {
+        proxy_pass http://localhost:8000;
+    }
+
+    location /static {
+       alias  /opt/hat/static;
+    }
+
+
+    error_page  404              /404.html;
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+
+```
+
+
+### reload
+`nginx -s reload`
+
+## docker 部署
+
+### 安装docker
+```
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum install docker-ce docker-ce-cli containerd.io
+```
+
+### 配置docker 
+```
+cat << EOF> /etc/docker/daemon.json
+{
+  "insecure-registries" : ["127.0.0.1:5000", "192.168.10.3:5000", "120.132.114.214:5000"],
+  "registry-mirror": "https://docker.mirrors.ustc.edu.cn",
+  "storage-driver": "overlay2",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+
+```
+
+### 启动docker
+`systemctl start docker`
+
+### 设置开启启动
+`systemctl enable docker`
+
+
+### 下载python3.7 镜像
+`docker pull python:3.7`
+
+### 运行python3.7
+`docker run --rm -it  python:3.7  /bin/bash`
+
+### 制作docker镜像
+
+编写Dockerfile
+```
+cat << EOF>Dockerfile
+FROM python:3.7
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/hat
+COPY requirements.txt ./
+COPY default.conf  /etc/nginx/conf.d
+RUN pip install -r requirements.txt -i https://pypi.douban.com/simple/
+COPY . .
+CMD sh start.sh
+EOF
+
+cat << EOF>start.sh
+nohup gunicorn hat.wsgi >logs/gunicorn.log 2>&1 &
+nohup celery -A  hat  worker --loglevel=info >logs/celery.log 2>&1 &
+nohup celery -A  hat  beat  --loglevel=info >logs/celery_beat.log 2>&1 &
+nginx -g 'daemon off;'
+EOF
+
+cat << EOF> default.conf
+server {
+    listen       80 default_server;
+    server_name  _;
+
+    charset utf-8;
+    access_log  /var/log/nginx/access.log;
+
+    location / {
+        proxy_pass http://localhost:8000;
+    }
+
+    location /static {
+       alias  /opt/hat/static;
+    }
+
+
+    error_page  404              /404.html;
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+EOF
+```
+
+生成镜像命令
+`docker build . -t hat:1.0`
+
+运行镜像
+`docker run -d -p 80:80  --name hat hat:1.0`
+
+
+### mysql创建用户并授权
+
+`grant all on hat.* to 'hatuser'@'%' identified by "hat2019";`
+
+### 查看mysql当前用户
+`select user,password,host from mysql.user;`
+
+### 修改hat/settings.py
+
+
+### mysql备份
+
+`mysqldump -uroot -p hat >hat.sql`
+
+### 导出表结构
+`mysqldump -d -u root -p hat >hat.sql`
+
+### 导出数据
+
+`mysqldump     -t -u root -p hat >hat.sql`
+
+### 导入数据
+
+`mysql -uroot -p hat<hat.sql`
+
+
+在mysql cli中执行
+`source hat.sql`
+
+
+
+### docker registry
+
+docker 镜像的仓库
+```
+docker run -d \
+  -p 5000:5000 \
+  --restart=always \
+  --name registry \
+  -v /mnt/registry:/var/lib/registry \
+  registry:2
+```
+### 向registry push image
+
+```
+docker tag hat:1.0 192.168.1.5:5000/hat:1.0
+docker push 192.168.1.5:5000/hat:1.0
+```
+
+### 从仓库拉镜像
+```
+docker pull 192.168.1.5:5000/hat:1.0
+```
+
+### mysql 容器
+
+https://hub.docker.com/_/mysql
+
 
 

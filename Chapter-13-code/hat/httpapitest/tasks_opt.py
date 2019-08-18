@@ -22,7 +22,7 @@ def create_task(name, task, task_args, crontab_time, desc):
         crontab = celery_models.CrontabSchedule.objects.create(**crontab_time)
     task.crontab = crontab  # 设置crontab
     task.enabled = True  # 开启task
-    task.kwargs = json.dumps(task_args, ensure_ascii=False)  # 传入task参数
+    task.kwargs = json.dumps(task_args.values(), ensure_ascii=False)  # 传入task参数
     task.description = desc
     task.save()
     return 'ok'

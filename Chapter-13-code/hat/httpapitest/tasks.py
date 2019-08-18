@@ -8,6 +8,7 @@ from .utils import add_test_reports
 from .runner import run_by_project, run_by_module, run_by_suite
 from httprunner.api import HttpRunner
 from httprunner.logger import logger
+from httpapitest.models import Project
 
 
 @shared_task
@@ -38,7 +39,7 @@ def project_hrun(name, base_url, project):
     :param project: str
     :return:
     """
-    logger.setup_logger('INFO')
+   
     kwargs = {
         "failfast": False,
     }
@@ -53,8 +54,8 @@ def project_hrun(name, base_url, project):
     runner.run(testcase_dir_path)
     shutil.rmtree(testcase_dir_path)
 
-    runner.summary = timestamp_to_datetime(runner.summary)
-    report_path = add_test_reports(runner, report_name=name)
+    summary = timestamp_to_datetime(runner.summary)
+    report_path = add_test_reports(summary, report_name=name)
 
     
     os.remove(report_path)
