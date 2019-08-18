@@ -273,6 +273,8 @@ EOF
 cat << EOF>Dockerfile
 FROM python:3.7
 
+
+COPY sources.list  /etc/apt/sources.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         nginx \
@@ -280,7 +282,7 @@ RUN apt-get update \
 
 WORKDIR /opt/hat
 COPY requirements.txt ./
-COPY sources.list  /etc/apt/sources.list
+
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple/
 COPY . .
 COPY default  /etc/nginx/sites-enabled
