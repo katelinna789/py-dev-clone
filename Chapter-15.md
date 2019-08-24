@@ -51,7 +51,7 @@ tar zxvf apache-tomcat-8.5.43.tar.gz
 mv apache-tomcat-8.5.43 /opt
 cd /opt
 ln -s apache-tomcat-8.5.43 tomcat
-
+```
 # 启动tomcat
 `/opt/tomcat/bin/startup.sh`
 
@@ -86,7 +86,11 @@ ip:8080/jenkins
 
 
 如提示离线，修改/root/.jenkins/hudson.model.UpdateCenter.xml中的url
-`https://updates.jenkins.io/update-center.json` 改为
+
+`https://updates.jenkins.io/update-center.json` 
+
+改为
+
 `https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json`
 
 重启tomcat
@@ -137,6 +141,7 @@ export PATH=$MAVEN_HOME/bin:$JAVA_HOME/bin:$PATH
 
 
 源代码管理 选择git 并输入git地址
+
 `git@github.com:jiam/hello-world.git`
 
 ![img](./Chapter-15-code/pics/jenkins10.png)
@@ -266,7 +271,7 @@ pipeline {
 }
 ```
 
-![pipeline](https://jenkins.io/zh/doc/book/pipeline/syntax/#compare)
+[pipeline 文档](https://jenkins.io/zh/doc/book/pipeline/syntax/#compare)
 
 ## 安装blueocean插件
 
