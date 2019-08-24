@@ -279,3 +279,58 @@ jenkins -系统管理 -插件管理 - 可选插件 - 搜索bule 选择bule ocean
 
 ![img](./Chapter-15-code/pics/jenkins20.png)
 
+
+## 使用tag 发布版本
+
+打tag
+```
+git tag 1.0
+git push origin --tags
+```
+
+项目hat 参数构建
+
+修改项目 pipeline 脚本
+
+```
+pipeline {
+    agent any
+   
+    stages {
+        stage('git checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: 'refs/tags/$tag']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:jiam/hat.git']]])
+        
+            }    
+        }
+        stage('Build image') {
+            steps {
+                sh '''
+                      docker build . -t hat:$tag
+                      
+                   '''
+            }
+        }
+        stage('deloy hat') {
+            steps {
+                sh '''
+                      
+                      ssh 127.0.0.1 "docker stop hat; docker rm hat; docker run -d -p 80:80  --name hat hat:$tag"
+                      
+                   '''
+            }
+        }
+    }
+}
+```
+
+
+使用commit id发布
+
+```
+                checkout([$class: 'GitSCM', branches: [[name: 'b762a5b9025206112eaede1e8e736c04fb30c42e']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:jiam/hat.git']]])
+
+```
+
+
+
