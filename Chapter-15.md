@@ -289,6 +289,7 @@ git push origin --tags
 ```
 
 项目hat 参数构建
+新建tag 字符参数
 
 修改项目 pipeline 脚本
 
