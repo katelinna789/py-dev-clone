@@ -177,7 +177,7 @@ URL: /createItem/api/json?name=xxx
 
 ### 修改job
 
-URL: jenkins/job/hat/config.xml/api/json
+URL: jenkins/job/{hat}/config.xml/api/json
 方法: POST
 数据类型: text/xml
 
