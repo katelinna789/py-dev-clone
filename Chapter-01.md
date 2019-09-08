@@ -99,18 +99,18 @@ git branch dev
 git checkout dev
 ```
 创建并切换分支
-```buildoutcfg
+```
 git branch -b dev
 ```
 将新的分支push到远程仓库
-````
+```
 git push --set-upstream origin dev
 # 或
 git push -u origin dev
-````
+```
 
 拉取远程分支
-````
+```
 git checkout dev
 ```
 本地不存在dev时，远程存在时拉取远程dev，并创建本地dev分支
