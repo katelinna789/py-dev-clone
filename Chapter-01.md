@@ -28,11 +28,17 @@ https://git-scm.com/
 * git clone
 
 **对现有项目，开始使用git，打开git bash进入项目目录**
+
+初始化项目目录
 ````
 git init
 ````
-初始化后，在当前目录下会出现一个名为 .git 的目录，所有 Git 需要的数据和资源都存放在这个目录中。
+初始化后，在当前目录下会出现一个名为 .git 的隐藏目录目录(`ls -a`查看)，所有 Git 需要的数据和资源都存放在这个目录中。
 如果当前目录下有几个文件想要纳入版本控制，需要先用 git add 命令告诉 Git 开始对这些文件进行跟踪，然后提交
+如果要排除一些目录或文件既不加入版本控制，需要创建一个.gitignore的文件，文件写上要排除的目录活文件
+
+
+将文件加入git 本地仓库
 ````
 git add hw.py
 git commit -m 'init this project'
@@ -44,7 +50,7 @@ git commit -m 'init this project'
 ````
 git clone https://github.com/jiam/python-dev.git
 ````
-当前目录就会出现python-dev这个项目
+当前目录就会出现python-dev这个项目 `https://github.com/jiam/python-dev.git` 为远程仓库的地址
 
 #### 4. 将本地的git项目push到远程仓库如：github
 * 在github注册账号
@@ -58,8 +64,10 @@ git commit -m "first commit"
 git remote add origin https://github.com/jiam/test.git
 git push -u origin master
 ````
-* git remote add  添加远程仓库
-* git push 将本地仓库推送到远程仓库
+* git remote add  origin 为远程仓库起名字，  https://github.com/jiam/test.git为远程仓库的url
+* git push -u 将本地仓库的master 分支推送的远程名字为 origin 仓库master分支，第一次推送的时候执行，以后直接使用`git push`
+-u 为--set-upstream 的缩写既将本地master 分支与 远程origin仓库的master分支关联
+ 
 
 #### 5. git的回滚
 * 工作区
@@ -81,15 +89,47 @@ git checkout filename
 git reset --hard HEAD^
 ````
 
-#### 6. 添加分支
+#### 6. 分支管理
 在仓库中添加一个新的分支
 ````
 git branch dev
 ````
+切换分支
+```
+git checkout dev
+```
+创建并切换分支
+```buildoutcfg
+git branch -b dev
+```
 将新的分支push到远程仓库
 ````
 git push --set-upstream origin dev
+# 或
+git push -u origin dev
 ````
+
+拉取远程分支
+````
+git checkout dev
+```
+本地不存在dev时，远程存在时拉取远程dev，并创建本地dev分支
+如本地存在，既切换到本地的dev分支
+
+查看本地分支
+
+`git branch`
+
+查看远程分支
+
+`git branch -r`
+
+查看所有分支
+`git branch --all`
+
+查看本地分支与远程分支的关联关系
+`git branch -vv`
+
 #### 7. 合并分支
 在dev中更改代码后想合并回master
 ````
@@ -103,6 +143,16 @@ git merge dev
 [credential]
     helper = store
 ````
+添加以上配置后git会记录使用http连接时，使用的账号密码
+
+#### 9. 配置密钥
+```
+ssh-keygen
+# 然后连续回车在~/.ssh下会生成两个文件id_rsa,id_rsa.pub
+cat  ~/.ssh/id_rsa.pub
+
+# 复制内容添加到github中的ssh认证中，使用git协议地址不需要密码
+```
 
 ## 二、 pycharm中使用git
 #### 1. 新建git项目
