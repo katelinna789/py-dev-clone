@@ -36,6 +36,7 @@ if __name__ == "__main__":
 
 练习：取出n层嵌套列表里的所有元素
 提示判断一个元素i是否是list 使用isinstance(i,list)函数
+[1,2,3,[4,5,6]]  1 2 3 4 5 6
 
 
 
@@ -376,9 +377,7 @@ def adder(addlock):
     global count
     addlock.acquire()
     count = count + 1
-    addlock.release()
     time.sleep(0.1)
-    addlock.acquire()
     count = count + 1
     addlock.release()
 
@@ -405,8 +404,7 @@ def adder(addlock):
     global count
     with addlock:
         count = count + 1
-    time.sleep(0.1)
-    with addlock:
+        time.sleep(0.1)
         count = count + 1
 
 addlock = threading.Lock()

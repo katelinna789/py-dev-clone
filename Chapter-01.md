@@ -128,7 +128,12 @@ git checkout dev
 `git branch --all`
 
 查看本地分支与远程分支的关联关系
+
 `git branch -vv`
+
+删除分支
+
+`git branch -d 分支名`
 
 #### 7. 合并分支
 在dev中更改代码后想合并回master
@@ -186,6 +191,7 @@ cat  ~/.ssh/id_rsa.pub
 编写一个通讯录程序，实现增删改查功能
 #### 1.设计数据结构
 一条记录： 姓名，电话， id
+
 一个通讯录：列表，里面元素为记录
 
 #### 2. 函数设计
