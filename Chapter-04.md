@@ -45,13 +45,31 @@ if __name__ == '__main__':
 
 ```
 
-def get_contents(url):
+import requests
+from bs4 import BeautifulSoup
+from multiprocessing import Pool
 
+
+def get_orders(url):
+    res = requests.get(url)
+    bs = BeautifulSoup(res.text, 'lxml')
+    h = bs.select('#billboard > div.billboard-hd > h2')[0]
+    t = h.contents[0]
+    orders = bs.select('#billboard > div.billboard-bd > table')[0]
+    urls = []
+    for order in orders.find_all('a'):
+        urls.append((order['href'],order.string))
+    return t, urls
+
+
+
+def get_contents(url):
+    url, name = url.split('|')
     res = requests.get(url)
     bs = BeautifulSoup(res.text, 'lxml')
     c = bs.select('#link-report')[0]
 
-    return(c.text)
+    return(name, c.text.strip())
 
 if __name__ == '__main__':
 
