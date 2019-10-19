@@ -21,7 +21,7 @@ html介绍
 
 ### html 元素
 
-![img](./Chapter-06-code/pic/grumpy-cat-small.png)
+![img](./Chapter-04-code/pic/grumpy-cat-small.png)
 
 1. 元素的构成
 
@@ -62,7 +62,7 @@ html介绍
 ### 属性
 元素可以有属性
 
-![img](./Chapter-06-code/pic/grumpy-cat-attribute-small.png)
+![img](./Chapter-04-code/pic/grumpy-cat-attribute-small.png)
 
 属性包含元素的额外信息，这些信息不会出现在实际的内容中。在上述例子中，这个class属性给元素赋了一个识别的名字，这个名字可以css所使用
 
@@ -129,7 +129,7 @@ html介绍
 ### html中的特殊字符
 
 常见特殊字符
-![img](./Chapter-06-code/pic/timg.jpg)
+![img](./Chapter-04-code/pic/timg.jpg)
 
 ### HTML注释
 为了将一段HTML中的内容置为注释，你需要将其用特殊的记号`<!--和-->`包括起来， 比如：
@@ -142,7 +142,7 @@ html介绍
 ### html 元数据
 
 
-![img](./Chapter-06-code/pic/meta.jpg)
+![img](./Chapter-04-code/pic/meta.jpg)
 ```
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -473,7 +473,7 @@ p {
 ````
 
 在CSS中，我们的规则集以选择器开头，后面紧跟着大括号。在这些大括号内是由属性和值对组成的声明，每个声明都以一个属性开头，后面跟着冒号，属性值，最后是分号。
-![img](./Chapter-06-code/css-syntax-outline.png)
+![img](./Chapter-04-code/css-syntax-outline.png)
 
 **使用选择器**
 
@@ -525,14 +525,14 @@ h2, p {color:gray;}
 将 `<h2>` 和 `<p>` 选择器放在规则左边，然后用逗号分隔，就定义了一个规则。其右边的样式（color:gray;）将应用到这两个选择器所引用的元素
 。逗号告诉浏览器，规则中包含两个不同的选择器。如果没有这个逗号，那么规则的含义将完全不同
 
-[示例](./Chapter-06-code/css-example11.html)
+[示例](./Chapter-04-code/css-example11.html)
 
-[示例](./Chapter-06-code/css-example12.html)
+[示例](./Chapter-04-code/css-example12.html)
 
 通配符选择器
 通配选择器，显示为一个星号（*）。该选择器可以与任何元素匹配，就像是一个通配符。例如，下面的规则可以使文档中的每个元素都为红色：
 
-[示例](./Chapter-06-code/css-example13.html)
+[示例](./Chapter-04-code/css-example13.html)
 
 后代选择器
 
@@ -541,15 +541,15 @@ h2, p {color:gray;}
 
 举例来说，如果您希望只对 h1 元素中的 em 元素应用样式，可以这样写
 
-[示例](./Chapter-06-code/css-example14.html)
+[示例](./Chapter-04-code/css-example14.html)
 
-[示例](./Chapter-06-code/css-example15.html)
+[示例](./Chapter-04-code/css-example15.html)
 
 子元素选择器
 
 如果不希望选择任意的后代元素，而是希望缩小范围，只选择某个元素的子元素，请使用子元素选择器（Child selector）。
 例如，如果希望选择只作为 h1 元素子元素的 strong 元素，可以这样写：
-[示例](./Chapter-06-code/css-example16.html)
+[示例](./Chapter-04-code/css-example16.html)
 
 组合选择器
 到目前为止，我们已经看过如何分别使用不同类型的选择器，但我们也需要知道如何一起使用这些选择器。通过组合选择器，我们可以更具体地了解我们想要选择的元素或元素组。
@@ -557,7 +557,7 @@ h2, p {color:gray;}
 例如，假设我们要选择位于具有hotdog class属性值的元素内的所有`<p>`元素，并将其背景颜色设置为棕色。
 如果其中一个`<p>`碰巧具有mustard的class属性值，我们希望将其背景颜色设置为黄色。
 
-[示例](./Chapter-06-code/css-example4.html)
+[示例](./Chapter-04-code/css-example4.html)
 
 当选择器组合时，应该从右到左阅读.最右边的选择器直接位于花括号之前，被称为key选择器。
 key选择器确切地标识样式将应用于哪个元素。key 选择器左侧的任何选择器都将用作预选者
@@ -621,12 +621,12 @@ p {margin-left:20px;}
 例如，假设我们选择样式表顶部的所有`<p>`元素，并将它们的背景颜色设置为橙色，并将它们的字体大小设置为24像素
 然后在样式表的底部，我们再次选择所有段落元素，并将其背景颜色设置为绿色，如此处所示
 
-[示例](./Chapter-06-code/css-example1.html)
+[示例](./Chapter-04-code/css-example1.html)
 
 由于将背景色设置为绿色的段落选择符位于将背景色设置为橙色的段落选择符之后
 它将在层叠中优先，所有段落将以绿色背景显示。字体大小将保持24像素，因为第二个段落选择器不能识别新的字体大小。
 
-[示例](./Chapter-06-code/css-example2.html)
+[示例](./Chapter-04-code/css-example2.html)
 
 层叠样式也适用于单个选择器内的属性。例如，再说一遍，我们选择所有的段落元素并将它们的背景颜色设置为橙色。
 然后直接在橙色背景属性和值声明的下方，我们添加另一个属性和值声明，将背景颜色设置为绿色，如示例所示。
@@ -647,11 +647,11 @@ CSS中的所有颜色值都是在sRGB（标准的红色，绿色和蓝色）颜�
 
 [名称](https://www.w3.org/TR/css-color-3/)。
 
-![img](./Chapter-06-code/css-colors.png)
+![img](./Chapter-04-code/css-colors.png)
 
 在这里，我们将褐色背景应用于具有task class属性值和将yellow背景应用于具有count class属性值
 
-[示例](./Chapter-06-code/css-example6.html)
+[示例](./Chapter-04-code/css-example6.html)
 
 ```
 .task {
@@ -673,11 +673,11 @@ CSS中的所有颜色值都是在sRGB（标准的红色，绿色和蓝色）颜�
 
 如果以六字符表示，前两个字符是匹配对，第三个和第四个字符是匹配对，并且最后两个字符是匹配对，
 则六个字符的数字可以缩短为三个字符的数字，例如，由十六进制颜色＃ff6600表示的橙色阴影也可以写为＃f60。
-![url](./Chapter-06-code/hexadecimal-syntax.png)
+![url](./Chapter-04-code/hexadecimal-syntax.png)
 
 要从之前创建相同背景颜色，我们可以用十六进制颜色值替换名称颜色值，如此处所示
 
-[示例](./Chapter-06-code/css-example7.html)
+[示例](./Chapter-04-code/css-example7.html)
 
 ```
 .task {
@@ -697,7 +697,7 @@ RGB颜色值使用rgb（）函数表示，该函数代表红色，绿色和蓝�
 第一个代表红色，第二个绿色，三个蓝色
 要从之前创建相同背景颜色，我们可以rgb表示
 
-[示例](./Chapter-06-code/css-example8.html)
+[示例](./Chapter-04-code/css-example8.html)
 
 ````
 .task {
@@ -814,7 +814,7 @@ none 使元素不显示
 
 我们可以通过在CSS中设置显示display的值来更改元素的显示属性值。
 
-[示例](./Chapter-06-code/example1.html)
+[示例](./Chapter-04-code/example1.html)
 
 #### 什么是Box Model(盒子模型)
 
@@ -950,7 +950,7 @@ div {
 
 边框（border）的style常见的有solid, double, dashed, dotted, 和 none
 
-[示例](./Chapter-06-code/example3.html)
+[示例](./Chapter-04-code/example3.html)
 
 
 单独设置border的各个边，border-top, border-right, border-bottom, 和 border-left
@@ -978,7 +978,7 @@ div {
 
 ````
 
-[示例](./Chapter-06-code/example4.html)
+[示例](./Chapter-04-code/example4.html)
 
 ### css定位
 
@@ -998,7 +998,7 @@ img {
 ````
 未使用float属性
 
-[示例](./Chapter-06-code/example5.html)
+[示例](./Chapter-04-code/example5.html)
 
 这里的`<section>`和`<aside>`元素作为块级元素.默认情况下，它们将堆叠在一起
 但是，我们希望这些元素并排放置。将`<section>`浮动到左侧，将`<aside>`浮动到右侧
@@ -1033,7 +1033,7 @@ aside {
 
 ````
 
-[示例](./Chapter-06-code/example6.html)
+[示例](./Chapter-04-code/example6.html)
 
 浮动可能会更改元素的显示值
 浮动元素时，识别元素从页面的正常流中移除也很重要，这可能会更改元素的默认显示值。
@@ -1069,7 +1069,7 @@ section {
 ````
 这里我们有三列，所有列都具有相等的宽度和边距值，并且全部浮动到左侧。
 
-[示例](./Chapter-06-code/example7.html)
+[示例](./Chapter-04-code/example7.html)
 
 
 ## js
