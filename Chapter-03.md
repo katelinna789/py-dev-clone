@@ -1,9 +1,40 @@
 # 第三天
 
-## 爬虫基础知识
-1. HTTP原理
+1. HTTP协议
 2. 网页的基础知识
-3. 爬虫基础原理
+3. 使用python与web交互
+
+## http
+
+HTTP的全称是Hyper Text Transfer Protocol，中文名叫作超文本传输协议
+
+
+通俗来讲，http是计算机通过网络进行通信的规则，是一个基于请求与响应，无状态的，应用层的协议，常基于TCP/IP协议传输数据。
+
+四个基于：
+
++ 请求与响应：客户端发送请求，服务器端响应数据
+
++ 无状态的：协议对于事务处理没有记忆能力，客户端第一次与服务器建立连接发送请求时需要进行一系列的安全认证匹配等，因此增加页面等待时间，当客户端向服务器端发送请求，服务器端响应完毕后，两者断开连接，也不保存连接状态，一刀两断！恩断义绝！从此路人！下一次客户端向同样的服务器发送请求时，由于他们之前已经遗忘了彼此，所以需要重新建立连接。
+
++ 应用层：Http是属于应用层的协议，配合TCP/IP使用。
+
++ TCP/IP：Http使用TCP作为它的支撑运输协议。HTTP客户机发起一个与服务器的TCP连接，一旦连接建立，浏览器（客户机）和服务器进程就可以通过套接字接口访问TCP。
+
+
+HTTPS的全称是Hyper Text Transfer Protocol over Secure Socket Layer，是以安全为目标的HTTP通道，简单讲是HTTP的安全版，即HTTP下加入SSL层，简称为HTTPS。
+
+
+### 浏览器打开一个网页的请求过程
+准备打开浏览器输入一个url
+
+1. 域名解析
+2. 发起tcp连接(三次握手建立连接)
+3. 建立TCP连接后发起http请求
+4. 服务器端响应http请求，浏览器得到html代码
+5. 关闭tcp连接（非keepalive）
+6. 浏览器解析html代码，并请求html代码中的资源
+7. 浏览器对页面进行渲染呈现给用户
 
 ### URI和URL
 
@@ -20,14 +51,141 @@ URN确定了东西的身份，URL提供了找到它的方式。
 
 ![img](./Chapter-03-code/pics/url-uri-miessler2018-e1541689316436.png)
 
+URL 格式
+```
+<scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>#<frag>
+<方案>://<用户>:<密码>@<主机>:<端口>/<路径>;<参数>?<查询>#<片段>
+```
+URL最重要的3个部分是方案(scheme)、主机(host)、和路径(path)
+
++ scheme  获取资源时要使用哪种协议（http，https，ftp，mailto，）
++ user  访问资源时需要的用户名
++ password  用户名后面可能要包含的密码，中间由冒号(:)分隔
++ host         域名/ip
++ port          端口
++ path         资源路径
++ ;params    参数，键/值对。URL中可以包含多个参数字段，它们相互之间以及与路径的其他部分之间用分号(;)分隔 
++ query    查询字符串，用"?"将其与URL的其余部分分隔开来 
++ frag    片段，一个网页中一部分资源的名字（访问html中的锚点）
+
+使用python解析url
+```
+from urllib.parse import urlparse
+obj = urlparse('https://baike.baidu.com/item/统一资源定位系统/5937042?fromtitle=url&fromid=110640')
+print(obj)
+print(obj.path)
+print(obj.scheme)
+```
 
 
-### http和https
+URL编码 
 
-HTTP的全称是Hyper Text Transfer Protocol，中文名叫作超文本传输协议
-HTTPS的全称是Hyper Text Transfer Protocol over Secure Socket Layer，是以安全为目标的HTTP通道，简单讲是HTTP的安全版，即HTTP下加入SSL层，简称为HTTPS。
+url中只能出现以下字符
 
-HTTP请求过程
+保留字符， 保留字符是那些具有特殊含义的字符，例如：/用于URL不同部分的分割符，还有? ; & 等等这些字符在url中有特殊意义
+```
+!	*	'	(	)	;	:	@	&	=	+	$	,	/	?	#	[	]
+```
+非保留字符
+```
+A	B	C	D	E	F	G	H	I	J	K	L	M	N	O	P	Q	R	S	T	U	V	W	X	Y	Z
+a	b	c	d	e	f	g	h	i	j	k	l	m	n	o	p	q	r	s	t	u	v	w	x	y	z
+0	1	2	3	4	5	6	7	8	9	-	_	.	~
+```
+
+除了以上字符其它字符和 出现在其它位置的保留字符（比如查询字符串里出现@,+，&）均需要进行编码。
+
+ascii
+首先需要把该字符的ASCII的值表示为两个16进制的数字，然后在其前面放置转义字符("%")，置入URI中的相应位置。
+如`;`的编码为 `hex(ord(';'))`
+
+非ascii码
+对于非ASCII字符, 需要转换为UTF-8字节序,然后在其前面放置转义字符("%")
+```
+>>> s='中国'
+>>> s.encode('utf-8')
+b'\xe4\xb8\xad\xe5\x9b\xbd
+```
+在百度中搜索中国然后在开发者工具中查看请求的url
+
+python url编码
+对参数(key=value)编码
+```
+from urllib.parse import urlencode
+data = {
+    'kw': '中国'
+}
+print(urlencode(data))
+
+```
+对字符进行编码
+```
+from urllib.parse import quota
+print(quote('中国'))
+```
+
+
+
+
+
+
+### 域名，IP，DNS
+
+ipv4
+IP地址由32位二进制数组成，为便于使用，常以XXX.XXX.XXX.XXX形式表现，每组XXX代表小于或等于255的10进制数，该表示方法称为点分十进制。例如维基媒体的一个IP地址是208.80.152.2。IP地址是唯一的。当前IPv4技术可能使用的IP地址最多可有4,294,967,296个（即2的32次方）
+
+ipv6
+从IPv4到IPv6最显著的变化就是网络地址的长度。IPv6中可能的地址有2的128次方个，IPv6地址为128位长，但通常写作8组，每组四个十六进制数的形式。例如：2001:0db8:85a3:08d3:1319:8a2e:0370:7344
+
+
+网域名称（英语：Domain Name，简称：Domain），简称域名.是由一串用点分隔的字符组成的互联网上某一台计算机或计算机组的名称，用于在数据传输时标识计算机的电子方位。域名可以说是一个IP地址的代称，目的是为了便于记忆后者。例如，www.baidu.com是一个域名，和一个IP地址相对应。人们可以直接访问www.baidu.com来代替IP地址，然后域名系统（DNS）就会将它转化成便于机器识别的IP地址。这样，人们只需要记忆wikipedia.org这一串带有特殊含义的字符，而不需要记忆没有含义的数字。
+
+域名的核心是域名系统（英语：Domain Name System，缩写：DNS），域名系统中的任何名称都是域名。在域名系统的层次结构中，各种域名都隶属于域名系统根域的下级。域名的第一级是顶级域，它包括通用顶级域，例如.com、.net和.org；以及国家和地区顶级域，例如.us、.cn和.tk。顶级域名下一层是二级域名，一级一级地往下。这些域名向人们提供注册服务，人们可以用它创建公开的互联网资源或运行网站。顶级域名的管理服务由对应的域名注册管理机构（域名注册局）负责，注册服务通常由域名注册商负责
+
+![img](./Chapter-03-code/pics/3-1.jpg)
+
+dns解析过程
+![img](./Chapter-03-code/pics/3-2.jpg)
+
+
+### 端口
+tcp/udp 协议通讯时需要通过ip+端口来作为一个标识
+
+### 计算机是如何通信的
+计算机使用TCP/IP 协议栈进行通信
+
+TCP/IP参考模型是一个抽象的分层模型，这个模型中，所有的TCP/IP系列网络协议都被归类到4个抽象的"层"中。每一抽象层创建在低一层提供的服务上，并且为高一层提供服务。 完成一些特定的任务需要众多的协议协同工作，这些协议分布在参考模型的不同层中的，因此有时称它们为一个协议栈
+tcp/ip 分4层
++ 应用层 （ftp http smtp）
++ 传输层 （tcp，udp）
++ 网络层 （ip）
++ 链路层
+
+![img](./Chapter-03-code/pics/3-3.png)
+![img](./Chapter-03-code/pics/3-4.png)
+
+
+osi模型
+
++ 应用层
++ 标识层
++ 会话层
++ 传输层
++ 网络层
++ 链路层
++ 物理层
+
+![img](./Chapter-03-code/pics/3-5.png)
+
+协议封装
+tcp/ip 协议栈从上往下逐层封帐
+![img](./Chapter-03-code/pics/3-6.png)
+
+
+http封装
+![img](./Chapter-03-code/pics/3-9.jpg)
+
+### HTTP协议
 
 ![img](./Chapter-03-code/pics/1522052700.jpg)
 
@@ -38,16 +196,81 @@ http请求方法
 
 ![img](./Chapter-03-code/pics/1522052793.jpg)
 
-请求报文
+报文
 
 ![img](./Chapter-03-code/pics/143006_LICd_1469576.jpg)
++ start line 其实行
++ header     头部
++ body       报文实体 
+
+Header
+![img](./Chapter-03-code/pics/3-8.jpg)
 
 状态码
 
 ![img](./Chapter-03-code/pics/1522052892.jpg)
 
+常见body类型
 
-### 网页组成
++ application/x-www-form-urlencoded 表单
++ multipart/form-data
++ application/json
++ text/xml
+
+表单
+```
+POST http://www.example.com HTTP/1.1
+Content-Type: application/x-www-form-urlencoded;charset=utf-8
+
+title=test&sub%5B%5D=1&sub%5B%5D=2&sub%5B%5D=3
+
+```
+
+使用表单上传文件时
+```
+POST http://www.example.com HTTP/1.1
+Content-Type:multipart/form-data; boundary=----WebKitFormBoundaryrGKCBY7qhFd3TrwA
+
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA
+Content-Disposition: form-data; name="text"
+
+title
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA
+Content-Disposition: form-data; name="file"; filename="chrome.png"
+Content-Type: image/png
+
+PNG ... content of chrome.png ...
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA--
+
+```
+
+json数据
+```
+POST http://www.example.com HTTP/1.1 
+Content-Type: application/json;charset=utf-8
+
+{"title":"test","sub":[1,2,3]}
+```
+
+xml 数据
+```
+POST http://www.example.com HTTP/1.1 
+Content-Type: text/xml
+
+<?xml version="1.0"?>
+<methodCall>
+    <methodName>examples.getStateName</methodName>
+    <params>
+        <param>
+            <value><i4>41</i4></value>
+        </param>
+    </params>
+</methodCall>
+
+```
+
+
+## 网页的基础知识
 
 网页可以分为三大部分——HTML、CSS和JavaScript
 HTML是用来描述网页的一种语言，其全称叫作Hyper Text Markup Language，即超文本标记语言。网页包括文字、按钮、图片和视频等各种复杂的元素
@@ -60,240 +283,40 @@ CSS，全称叫作Cascading Style Sheets，即层叠样式表。“层叠”是�
 
 JavaScript，简称JS，是一种脚本语言。HTML和CSS配合使用，提供给用户的只是一种静态信息，缺乏交互性。我们在网页里可能会看到一些交互和动画效果，如下载进度条、提示框、轮播图等，这通常就是JavaScript的功劳
 
-### 爬虫基础原理
-
-简单来说，爬虫就是获取网页并提取和保存信息的自动化程序，下面概要介绍一下。
-
-1. 获取网页
-
-爬虫首先要做的工作就是获取网页，这里就是获取网页的源代码。源代码里包含了网页的部分有用信息，所以只要把源代码获取下来，就可以从中提取想要的信息了。
-
-前面讲了请求和响应的概念，向网站的服务器发送一个请求，返回的响应体便是网页源代码。所以，最关键的部分就是构造一个请求并发送给服务器，然后接收到响应并将其解析出来，那么这个流程怎样实现呢？总不能手工去截取网页源码吧？
-
-不用担心，Python提供了许多库来帮助我们实现这个操作，如urllib、requests等。我们可以用这些库来帮助我们实现HTTP请求操作，请求和响应都可以用类库提供的数据结构来表示，得到响应之后只需要解析数据结构中的Body部分即可，即得到网页的源代码，这样我们可以用程序来实现获取网页的过程了。
-
-2. 提取信息
-
-获取网页源代码后，接下来就是分析网页源代码，从中提取我们想要的数据。首先，最通用的方法便是采用正则表达式提取，这是一个万能的方法，但是在构造正则表达式时比较复杂且容易出错。
-
-另外，由于网页的结构有一定的规则，所以还有一些根据网页节点属性、CSS选择器或XPath来提取网页信息的库，如Beautiful Soup、pyquery、lxml等。使用这些库，我们可以高效快速地从中提取网页信息，如节点的属性、文本值等。
-
-提取信息是爬虫非常重要的部分，它可以使杂乱的数据变得条理清晰，以便我们后续处理和分析数据。
-
-3. 保存数据
-
-提取信息后，我们一般会将提取到的数据保存到某处以便后续使用。这里保存形式有多种多样，如可以简单保存为TXT文本或JSON文本，也可以保存到数据库，如MySQL和MongoDB等，也可保存至远程服务器，如借助SFTP进行操作等。
-
-4. 自动化程序
-
-说到自动化程序，意思是说爬虫可以代替人来完成这些操作。首先，我们手工当然可以提取这些信息，但是当量特别大或者想快速获取大量数据的话，肯定还是要借助程序。爬虫就是代替我们来完成这份爬取工作的自动化程序，它可以在抓取过程中进行各种异常处理、错误重试等操作，确保爬取持续高效地运行。
 
 
 ### 静态页面
 在网页中我们能看到各种各样的信息，最常见的便是常规网页，它们对应着HTML代码，而最常抓取的便是HTML源代码。
+此外，我们还可以看到各种二进制数据，如图片、视频和音频等。另外，还可以看到各种扩展名的文件，如CSS、JavaScript和配置文件等，
 
-另外，可能有些网页返回的不是HTML代码，而是一个JSON字符串（其中API接口大多采用这样的形式），这种格式的数据方便传输和解析，它们同样可以抓取，而且数据提取更加方便。
 
-此外，我们还可以看到各种二进制数据，如图片、视频和音频等。利用爬虫，我们可以将这些二进制数据抓取下来，然后保存成对应的文件名。
-
-另外，还可以看到各种扩展名的文件，如CSS、JavaScript和配置文件等，这些其实也是最普通的文件，只要在浏览器里面可以访问到，就可以将其抓取下来。
-
-上述内容其实都对应各自的URL，是基于HTTP或HTTPS协议的，只要是这种数据，爬虫都可以抓取。
 
 ### 动态页面
 
-有时候，我们在用urllib或requests抓取网页时，得到的源代码实际和浏览器中看到的不一样。
+有时候，我们查看网页的源代码实际和浏览器中看到的不一样。
 
 这是一个非常常见的问题。现在网页越来越多地采用Ajax、前端模块化工具来构建，整个网页可能都是由JavaScript渲染出来的，也就是说原始的HTML代码就是一个空壳
 比如 https://www.12306.cn/index/
 
-### 带认证的页面
+### 带认证的页面（cookie、session）
 
 HTTP的一个特点，叫作无状态。HTTP的无状态是指HTTP协议对事务处理是没有记忆能力的，也就是说服务器不知道客户端是什么状态。当我们向服务器发送请求后，服务器解析此请求，然后返回对应的响应，服务器负责完成这个过程，而且这个过程是完全独立的，服务器不会记录前后状态的变化，也就是缺少状态记录。
 
-两个用于保持HTTP连接状态的技术就出现了，它们分别是会话和Cookies。会话在服务端，也就是网站的服务器，用来保存用户的会话信息；Cookies在客户端，也可以理解为浏览器端，有了Cookies，浏览器在下次访问网页时会自动附带上它发送给服务器，服务器通过识别Cookies并鉴定出是哪个用户，然后再判断用户是否是登录状态，然后返回对应的响应。
+两个用于保持HTTP连接状态的技术就出现了，它们分别是Session和Cookies。Session在服务端，也就是网站的服务器，用来保存用户的会话信息；Cookies在客户端，也可以理解为浏览器端，有了Cookies，浏览器在下次访问网页时会自动附带上它发送给服务器，服务器通过识别Cookies并鉴定出是哪个用户，然后再判断用户是否是登录状态，然后返回对应的响应。
 
 
 我们可以理解为Cookies里面保存了登录的凭证，有了它，只需要在下次请求携带Cookies发送请求而不必重新输入用户名、密码等信息重新登录了。
 
-因此在爬虫中，有时候处理需要登录才能访问的页面时，我们一般会直接将登录成功后获取的Cookies放在请求头里面直接请求，而不必重新模拟登录
 
-### 代理的基本原理
-
-我们在做爬虫的过程中经常会遇到这样的情况，最初爬虫正常运行，正常抓取数据，一切看起来都是那么美好，然而一杯茶的功夫可能就会出现错误，比如403 Forbidden，这时候打开网页一看，可能会看到“您的IP访问频率太高”这样的提示。出现这种现象的原因是网站采取了一些反爬虫措施。比如，服务器会检测某个IP在单位时间内的请求次数，如果超过了这个阈值，就会直接拒绝服务，返回一些错误信息，这种情况可以称为封IP
-
-代理实际上指的就是代理服务器，proxy server，它的功能是代理网络用户去取得网络信息。在我们正常请求一个网站时，是发送了请求给Web服务器，Web服务器把响应传回给我们。如果设置了代理服务器，实际上就是在本机和服务器之间搭建了一个桥，此时本机不是直接向Web服务器发起请求，而是向代理服务器发出请求，请求会发送给代理服务器，然后由代理服务器再发送给Web服务器，接着由代理服务器再把Web服务器返回的响应转发给本机。这样我们同样可以正常访问网页，但这个过程中Web服务器识别出的真实IP就不再是我们本机的IP了，就成功实现了IP伪装，这就是代理的基本原理
-
-1. 突破自身IP访问限制，访问一些平时不能访问的站点。
-
-2. 访问一些单位或团体内部资源：比如使用教育网内地址段免费代理服务器，就可以用于对教育网开放的各类FTP下载上传，以及各类资料查询共享等服务。
-
-3. 提高访问速度：通常代理服务器都设置一个较大的硬盘缓冲区，当有外界的信息通过时，同时也将其保存到缓冲区中，当其他用户再访问相同的信息时，则直接由缓冲区中取出信息，传给用户，以提高访问速度。
-
-4. 隐藏真实IP：上网者也可以通过这种方法隐藏自己的IP，免受攻击。对于爬虫来说，我们用代理就是为了隐藏自身IP，防止自身的IP被封锁。
-
-对于爬虫来说，由于爬虫爬取速度过快，在爬取过程中可能遇到同一个IP访问过于频繁的问题，此时网站就会让我们输入验证码登录或者直接封锁IP，这样会给爬取带来极大的不便。
-
-使用代理隐藏真实的IP，让服务器误以为是代理服务器在请求自己。这样在爬取过程中通过不断更换代理，就不会被封锁，可以达到很好的爬取效果。
-
-### 爬虫基础模块
-
-爬虫的第一步就是要模拟浏览器发出请求，python实现http协议的模块有 urllib、requests等常用模块
-
-#### 使用urllib
-
-[urllib](https://docs.python.org/3/library/urllib.html)
-文档
-
-在python2中有urllib和urllib2,python3 中统一为urllib。它是python内置的库，不需要额外安装。
-urllib包含了4个模块
-
-1. request： 他是最基本的http请求模块，可以用来发送请求，取得相应结果
-2. error： 异常处理模块，如果请求出错我们可以捕获异常，进行处理
-3. parse： 对url进行处理
+## python与web交互
+python 有各种与web交互的模块
++ requests模块，发起http请求并取得相应
++ beautifulsoup4(bs4) 解析html内容提取元素
++ selenium 模拟浏览器操作
 
 
-##### 发送请求
+### Request模块
 
-1. urlopen()
-```
-from urllib import request
-
-r = request.urlopen("https://www.163.com")
-print(r.read().decode('gbk'))
-```
-
-r 是个HTTPResponse类的对象，主要包含read()、getheader(name)、getheaders()、info()、等方法，以及msg、version、status、reason等属性
-
-```
-from urllib import request
-
-r = request.urlopen("https://www.163.com")
-print(r.status)
-print(r.getheaders())
-print(r.getheader('Server'))
-```
-
-最基本的方法可以完成简单的get请求
-
-data参数
-
-data参数是可选的，设置了该参数请求方法就不再是get而是post
-
-发送一个表单请求 application/x-www-form-urlencoded
-
-```
-from urllib import request, parse
-
-data = bytes(parse.urlencode({'name': 'test'}), encoding='utf-8')
-r = request.urlopen('http://httpbin.org/post', data=data)
-print(r.read().decode())
-```
-
-timeout参数指定超时时间，单位是秒，如果超过了这个时间还没有得到响应就抛出异常
-
-```
-from urllib import request, parse
-
-r = request.urlopen('http://httpbin.org/get', timeout=0.1)
-print(r.read().decode())
-```
-进行异常处理
-```
-from urllib import request, parse, error
-
-try:
-    r = request.urlopen('http://httpbin.org/get', timeout=0.1)
-    print(r.read().decode())
-except error.URLError as e:
-    print(e.reason)
-```
-
-2. Request
-上面的方法可以完成一些简单的请求如何get和post表单，不能设置header，不支持其它请求方法
-如果需要自定义header或put、delete等方法就需要使用Request类来构造一个请求
-
-```
-from urllib import request
-
-rt = request.Request('https://python.org')
-re = request.urlopen(rt)
-print(re.read().decode())
-```
-
-自定义header
-```
-from urllib import request, parse
-
-url = 'http://httpbin.org/post'
-headers = {
-        'User-Agent': 'Mozilla/4.0',
-}
-d = {'name': 'test'}
-data = bytes(parse.urlencode(d), encoding='utf-8')
-
-req = request.Request(url,data,headers,method='POST')
-r = request.urlopen(req)
-
-print(r.read().decode())
-
-```
-发送json
-```
-from urllib import request
-import json
-
-headers = {
-        'Content-Type': 'application/json',
-}
-data = json.dumps({'name': 'test'})
-rt = request.Request('http://httpbin.org/post', headers=headers, data=bytes(data, encoding='utf-8'))
-r = request.urlopen(rt)
-
-print(r.read().decode())
-
-```
-
-##### 解析链接
-
-urlparse
-
-```
-from urllib.parse import urlparse
-
-result = urlparse('http://www.baidu.com/inex.html;user?id=5#comment')
-print(result)
-```
-
-unurlparse
-
-```
-from urllib.parse import urlunparse
-
-data = ['http', 'www.baidu.com', 'index.html', 'user', 'a=6', 'comment']
-print(urlunparse(data))
-```
-
-urljoin
-
-```
-from urllib.parse import urljoin
-
-print(urljoin('http://www.baidu.com', 'FAQ.html'))
-```
-
-urlencode
-
-```
-from urllib.parse import urlencode
-
-d = {'name': 'test'}
-
-print(urlencode(d))
-print(bytes(urlencode(d),encoding='utf-8'))
-```
-
-#### requests
 [requests](http://docs.python-requests.org/zh_CN/latest/user/quickstart.html)
 文档
 
@@ -348,73 +371,8 @@ r = requests.get('https://www.zhihu.com/explore', headers=headers)
 print(r.text)
 ```
 
-#### html解析库
 
-lxml
-
-```
-from lxml import etree
-
-text = '''
-<div>
-    <ul>
-         <li class="item-0"><a href="link1.html">first item</a></li>
-         <li class="item-1"><a href="link2.html">second item</a></li>
-         <li class="item-inactive"><a href="link3.html">third item</a></li>
-         <li class="item-1"><a href="link4.html">fourth item</a></li>
-         <li class="item-0"><a href="link5.html">fifth item</a>
-     </ul>
- </div>
-'''
-htmlEmt = etree.HTML(text)
-print(htmlEmt)
-```
-
-使用xpath定位元素
-
-```
-from lxml import etree
-
-text = '''
-<div>
-    <ul>
-         <li class="item-0"><a href="link1.html">first item</a></li>
-         <li class="item-1"><a href="link2.html">second item</a></li>
-         <li class="item-inactive"><a href="link3.html">third item</a></li>
-         <li class="item-1"><a href="link4.html">fourth item</a></li>
-         <li class="item-0"><a href="link5.html">fifth item</a>
-     </ul>
- </div>
-'''
-htmlEmt = etree.HTML(text)
-print(htmlEmt.xpath("//*"))
-```
-
-定位元素
-```
-print(htmlEmt.xpath("//li"))
-print(htmlEmt.xpath("//li/a"))
-```
-
-[xpath概念](http://www.w3school.com.cn/xpath/xpath_syntax.asp)
-
-通过属性定位
-
-```
-print(htmlEmt.xpath('//li[@class="item-0"]'))
-```
-
-获取属性值
-```
-print(htmlEmt.xpath('//li/@class'))
-```
-
-获取文本
-```
-print(htmlEmt.xpath('//li/a[@href="link1.html"]//text()'))
-```
-
-Beautiful Soup
+### Beautiful Soup模块
 
 [bs4](https://beautifulsoup.readthedocs.io/zh_CN/v4.4.0/)文档
 
@@ -494,7 +452,7 @@ print(rt.status_code)
 
 ```
 
-#### 简单爬虫
+### 简单爬虫
 ```
 import requests
 from bs4 import BeautifulSoup
@@ -539,9 +497,7 @@ while True:
 
 ```
 
-### 作业
 
-爬取最受欢迎电影影评 https://movie.douban.com/review/best/
 
 
 
