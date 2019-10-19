@@ -20,31 +20,34 @@
 * 练习找出目录树中的最大文件
 * 练习实现http一个压力测试脚本2
 
-## 爬虫
-### 第三天
-* 爬虫基础知识
-* 爬虫常用模块
-* 网页内容解析
-* 数据抓取
-* 自动登录，认证，验证码识别
-
+## 前端
+### 第三天 web基础知识
+* http协议
+* tcp/ip协议栈
+* 域名，ip，dns
+* 网页的基础知识
+* python与web交互
 
 ### 第四天
-* 爬虫并发抓取
-* 保存抓取结果
-* scrapy 基本概念
-* scrapy 解析器
-* scrapy 抓取结果写入数据库
-
-### 第五天
-* 实战-爬取全站
-* 实战-分布式爬虫
-
-### 第六天
 * html
 * css
 * bootstrap
-* vue2
+
+### 第五天  javascript基础
+* 变量和数据类型
+* 表达式运算符
+* 控制语句
+* 函数
+* 对象
+
+
+### 第六天 js前端
+* 浏览器对象
+* html DOM
+* 操作html文档
+* js 事件处理
+* jquery
+
 
 ## 7-9天
 django基础
@@ -54,22 +57,26 @@ django基础
 * 视图和模板
 * 认证与授权
 
-## 9-11天
-cicd平台,通过djanog调用jenkins实现自动部署
-* jenkins介绍
-* 通过jenkins 实现构建，部署
-* jenkins httpapi 详解
-* 使用Django开发cicd平台
+## 10-13天
 
-
-### 12-16天
 实战： 自动化接口测试平台
 
 * 项目管理
+* 模块管理
+* 用例管理
 * 接口测试
 * 压力测试
-* mock测试
 * 测试报告
 * 用户管理
 * 认证授权
 * dashboard
+
+## 14-16
+cicd
+* nginx、redis、mysql，linux环境部署
+* django 项目线上部署
+* jenkins介绍
+* 通过jenkins 实现构建，部署
+* Jenkins 部署java项目
+* Jenkins 部署django项目
+* jenkins httpapi 详解
