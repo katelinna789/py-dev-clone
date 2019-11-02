@@ -254,12 +254,12 @@ HTML由一系列的元素组成, 可以使用它来封装，标记内容的不�
 ### 表格
 
 ```
-<table class="dataintable">
+<table>
 <tr>
 <th>选择器</th>
 <th>例子</th>
 <th>例子描述</th>
-<th style="width:5%;">CSS</th>
+<th>CSS</th>
 </tr>
 
 <tr>
