@@ -205,7 +205,7 @@ s.substring(7); // 从索引7开始到结束，返回'world'
 
 
 
-布尔值
+### 布尔值
 布尔值和布尔代数的表示完全一致，一个布尔值只有true、false两种值，要么是true，要么是false，可以直接用true、false表示布尔值，也可以通过布尔运算计算出来：
 ```
 true; // 这是一个true值
@@ -214,7 +214,7 @@ false; // 这是一个false值
 2 >= 3; // 这是一个false值
 ```
 
-null和undefined
+### null和undefined
 
 null值表示一个空对象指针，指示变量未指向任何对象。
 ```
@@ -227,7 +227,7 @@ undefined表示值未定义。声明了一个变量，但未对其初始化时�
 var b;
 ```
 
-对象
+### 对象
 JavaScript的对象是属性的无序集合，每个属性都是一个键/值对。
 
 JavaScript的对象用于描述现实世界中的某个对象。例如，为了描述“小明”这个淘气的小朋友，我们可以用若干键值对来描述他：
@@ -327,7 +327,7 @@ xiaoming.hasOwnProperty('toString'); // false
 ```
 
 
-数组
+### 数组
 JavaScript的数组可以包含任意数据类型（与python列表类似），并通过索引来访问每个元素。
 
 要取得Array的长度，直接访问length属性：
