@@ -657,7 +657,7 @@ abs(-9, 'haha', 'hehe', null); // 返回9
 
 传入的参数比定义的少也没有问题：
 ```
-abs(); // 返回undefined
+abs(); // 返回NaN
 ```
 
 此时abs(x)函数的参数x将收到undefined，计算结果为NaN。
@@ -737,7 +737,7 @@ JavaScript的函数定义有个特点，它会先扫描整个函数体的语句�
 function foo() {
     var x = 'Hello, ' + y;
     console.log(x);
-    //var y = 'Bob';
+    var y = 'Bob';
 }
 
 foo();
@@ -767,7 +767,7 @@ var xiaoming = {
 };
 
 xiaoming.age; // function xiaoming.age()
-xiaoming.age(); // 今年调用是25,明年调用就变成26了
+xiaoming.age(); // 今年调用是29,明年调用就变成30了
 ```
 
 绑定到对象上的函数称为方法，和普通函数也没啥区别，但是它在内部使用了一个this关键字，这个东东是什么？
@@ -810,9 +810,9 @@ var xiaoming = {
     age: getAge
 };
 
-xiaoming.age(); // 25
-getAge.apply(xiaoming, []); // 25, this指向xiaoming, 参数为空
-getAge.call(xiaoming)
+xiaoming.age(); // 29
+getAge.apply(xiaoming); // 29, this指向xiaoming, 参数为空
+getAge.call(xiaoming);
 ```
 apply,call将函数绑定对象
 区别是：
