@@ -52,7 +52,7 @@ def deco(func):
     def inner():
         print("running inner()")
     return inner
-
+#@指向装饰器
 @deco
 def target():
     print('running target()')
@@ -75,10 +75,10 @@ def target():
 
 
 if __name__ == "__main__":
-    target = deco(target)
+    target = deco(target)#可以把函数当做参数传给另一个函数，，传参时未执行
     target()
 
-````
+````#由于没有实际调用（执行）target（）所以不执行print（'running target（）'）
 
 
 它可以让被装饰的函数在不需要做任何代码变动的前提下增加额外的功能，
@@ -375,7 +375,7 @@ count = 0
 
 def adder(addlock):
     global count
-    addlock.acquire()
+    addlock.acquire()#使用锁之前要先取锁
     count = count + 1
     time.sleep(0.1)
     count = count + 1
